@@ -44,27 +44,27 @@ public class Customer {
               // Handle order status
               if (substring[1].equals("status")) {
                 // Retrieve all order status
-                String[] orderStatus = customer.getOrderStatus();
+                String[] orderStatus = customer.getOrderStatus(customerName);
 
                 // Print all order status
                 System.out.println("\n[ RESULT SHOWN BELOW ]");
                 if (orderStatus.length == 0) {
-                  System.out.println("Oops, No order found for " + customerName);
+                  System.out.println("Oops, no new order found for " + customerName);
                 } else {
                   System.out.println("Order Status for " + customerName + ": ");
                   for (String order : orderStatus) {
-                    System.out.println("- " + order);
+                    System.out.println(order);
                   }
                 }
-                System.out.println("\nPress any key to continue..\n\n");
+                System.out.println("\nPress enter to continue..\n\n");
                 input.nextLine();
               }
               // Handle order drinks
               else {
-                String order = customer.orderDrinks(choice);
+                String order = customer.orderDrinks(choice, customerName);
                 System.out.println("\n[ RESULT SHOWN BELOW ]");
                 System.out.println("Order received from " + customerName + " (" + order + ")");
-                System.out.println("\nPress any key to continue..\n\n");
+                System.out.println("\nPress enter to continue..\n\n");
                 input.nextLine();
               }
               break;
@@ -80,7 +80,7 @@ public class Customer {
             default:
               System.out.println("\n[ RESULT SHOWN BELOW ]");
               System.out.println("Unknown Command: " + choice);
-              System.out.println("\nPress any key to continue..\n\n");
+              System.out.println("\nPress enter to continue..\n\n");
               input.nextLine();
               break;
           }

@@ -44,10 +44,15 @@ public class Orders {
     }
   }
 
+  public Integer getTotalOrders() {
+    return totalOrders;
+  }
+
   public String getCustomerName() {
     return customerName;
   }
 
+  // Methods to handle Waiting, Brewing, Tray Area
   public void setWaiting(Integer drinkID, String drinkType) {
     drinkWaiting.put(drinkID, drinkType);
   }
@@ -68,23 +73,25 @@ public class Orders {
     drinkBrewing.remove(drinkID);
   }
 
-  public void removeInTray(Integer drinkID) {
-    drinkInTray.remove(drinkID);
+  public void removeAllInTray() {
+    drinkInTray.clear();
   }
 
-  public Map<Integer, String> getWaiting() {
-    return drinkWaiting;
+  // Retrieve all drinks (tea & coffee) based on state
+  public Map<Integer, String> getDrinkState(String state) {
+    Map<Integer, String> stateType = new HashMap<>();
+
+    if (state.equals(WAIT))
+      stateType = drinkWaiting;
+    else if (state.equals(BREW))
+      stateType = drinkBrewing;
+    else if (state.equals(TRAY))
+      stateType = drinkInTray;
+
+    return stateType;
   }
 
-  public Map<Integer, String> getBrewing() {
-    return drinkBrewing;
-  }
-
-  public Map<Integer, String> getInTray() {
-    return drinkInTray;
-  }
-
-  // Retrieve drink current state
+  // Retrieve specific drink type (tea / coffee) and state
   public ArrayList<Integer> getDrinkState(String drinkType, String state) {
     Map<Integer, String> stateType = new HashMap<>();
     ArrayList<Integer> drinkState = new ArrayList<>();
