@@ -1,7 +1,6 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-
 import Helpers.CoffeeBar;
 import Helpers.HandleCustomer;
 
@@ -9,7 +8,7 @@ public class Barista {
   private final static int port = 8888;
   private final static CoffeeBar coffeeBar = new CoffeeBar();
 
-  // Main method to run the program, aka 'server', aka 'barista'
+  // Main method to run the program, a.k.a 'server', a.k.a 'barista'
   public static void main(String[] args) {
     OpenShop();
   }
@@ -25,12 +24,12 @@ public class Barista {
       System.out.println("Waiting for Customers...");
 
       // Server & Client are both seperated processes.
-      // If multiple client connected to server, means 'Server Process' will have multiple threads to handle different clients. 
+      // If multiple client connects to server, 'Server Process' will have multiple threads to handle different clients. 
       while (true){
-        // Socket stays in block state untill a customer is connected
+        // Socket stays in blocked state untill a customer is connected
         Socket socket = serverSocket.accept();
 
-        // Start thread for current customer
+        // Start independant thread for new joined customer
         new Thread(new HandleCustomer(socket, coffeeBar)).start();
       }
     } catch (IOException e) {

@@ -1,13 +1,12 @@
 import java.util.Scanner;
-
 import Helpers.CustomerModel;
 
 public class Customer {
   private static String choice = "";
 
-  public static void main(String[] args) { 
-    
-    System.out.println("Hello, how should I address you: ");
+  public static void main(String[] args) {
+
+    System.out.print("Hello, how should I address you: ");
 
     // Try to get user input
     try {
@@ -15,13 +14,13 @@ public class Customer {
       String customerName = input.nextLine();
 
       // Try to set up connection with Server
-      try (CustomerModel newCustomer = new CustomerModel(customerName)) {
+      try (CustomerModel customer = new CustomerModel(customerName)) {
         System.out.println("\nWelcome to the Cafe, " + customerName + ".");
 
-        // Receive input from user as Order / Request to Barista
+        // Receive input from user as Order, send Request to Barista
         while (!choice.equals("exit")) {
           // Prompt user on how to interact with the server
-          System.out.println("\nFollow Command Formats below to Interact with Barista:\n" +
+          System.out.println("\nCommand Formats to Interact with Barista:\n" +
               "****************************************" +
               "\n[ To Order ]\n" +
               "- order 1 tea / order 1 coffee\n" +
@@ -33,9 +32,9 @@ public class Customer {
               "\n[ Exit Cafe ]\n" +
               "- exit\n" +
               "****************************************");
-          System.out.println("Enter a Command:");
+          System.out.print("Enter a Command: ");
 
-          // Try to get user Input
+          // Get user Input
           choice = input.nextLine().toLowerCase();
           String[] substring = choice.split(" ");
 
@@ -44,31 +43,45 @@ public class Customer {
             case "order":
               // Handle order status
               if (substring[1].equals("status")) {
-                // Store retrieve all order status
-                String[] orderStatus = newCustomer.getOrderStatus();
+                // Retrieve all order status
+                String[] orderStatus = customer.getOrderStatus();
 
                 // Print all order status
-                System.out.println("\nOrder Status for: " + customerName);
-                for (String order : orderStatus) {
-                  System.out.println("- " + order);
+                System.out.println("\n[ RESULT SHOWN BELOW ]");
+                if (orderStatus.length == 0) {
+                  System.out.println("Oops, No order found for " + customerName);
+                } else {
+                  System.out.println("Order Status for " + customerName + ": ");
+                  for (String order : orderStatus) {
+                    System.out.println("- " + order);
+                  }
                 }
+                System.out.println("\nPress any key to continue..\n\n");
+                input.nextLine();
               }
               // Handle order drinks
               else {
-                String order = newCustomer.orderDrinks(choice);
+                String order = customer.orderDrinks(choice);
+                System.out.println("\n[ RESULT SHOWN BELOW ]");
                 System.out.println("Order received from " + customerName + " (" + order + ")");
+                System.out.println("\nPress any key to continue..\n\n");
+                input.nextLine();
               }
               break;
 
             // User exits the cafe
             case "exit":
-              newCustomer.exitCafe();
+              customer.exitCafe();
+              input.close();
               System.out.println("\nBye Bye, " + customerName + ".");
               break;
 
-            // User typed wrong command
+            // User typed a wrong command
             default:
+              System.out.println("\n[ RESULT SHOWN BELOW ]");
               System.out.println("Unknown Command: " + choice);
+              System.out.println("\nPress any key to continue..\n\n");
+              input.nextLine();
               break;
           }
         }

@@ -41,27 +41,34 @@ public class HandleCustomer implements Runnable {
 
           switch (substring[0]) {
             case "order_status":
-              // Retrive status of each orders
+              // Retrive all drink status
+              int numOfArea = 0;
+              int teaWaiting = 0, teaBrewing = 0, teaTray = 0;
+              int coffeeWaiting = 0, coffeeBrewing = 0, coffeeTray = 0;
               Map<String, Integer> orderStatus = coffeeBar.getOrderStatus(customerName);
 
-              int teaWaiting = orderStatus.get("tea_waiting").intValue();
-              int coffeeWaiting = orderStatus.get("coffee_waiting").intValue();
-
-              int teaBrewing = orderStatus.get("tea_brewing").intValue();
-              int coffeeBrewing = orderStatus.get("coffee_brewing").intValue();
-
-              int teaTray = orderStatus.get("tea_tray").intValue();
-              int coffeeTray = orderStatus.get("coffee_tray").intValue();
-
-              // Response with TOTAL DRINKS of customer
-              int numOfArea = 0;
-              if (teaWaiting + coffeeWaiting > 0) { numOfArea+=1; };
-              if (teaBrewing + coffeeBrewing > 0) { numOfArea+=1; };
-              if (teaTray + coffeeTray > 0) { numOfArea+=1; };
+              // Check if customer has order
+              if (!orderStatus.isEmpty()) {
+                teaWaiting = orderStatus.get("tea_waiting").intValue();
+                teaBrewing = orderStatus.get("tea_brewing").intValue();
+                teaTray = orderStatus.get("tea_tray").intValue();
+                coffeeWaiting = orderStatus.get("coffee_waiting").intValue();
+                coffeeBrewing = orderStatus.get("coffee_brewing").intValue();
+                coffeeTray = orderStatus.get("coffee_tray").intValue();
+                // Check if either AREA is empty
+                if (teaWaiting + coffeeWaiting > 0) {
+                  numOfArea += 1;
+                }
+                if (teaBrewing + coffeeBrewing > 0) {
+                  numOfArea += 1;
+                }
+                if (teaTray + coffeeTray > 0) {
+                  numOfArea += 1;
+                }
+              }
               writer.println(numOfArea);
 
               String teaPlural, coffeePlural;
-
               // Response with drinks in WAITING AREA
               if (teaWaiting > 0) {
                 teaPlural = teaWaiting > 1 ? "teas" : "tea";
@@ -112,21 +119,22 @@ public class HandleCustomer implements Runnable {
               break;
 
             case "order_drinks":
-              // order_drinks order 1 tea - 4
-              // order_drinks order 1 tea and 1 coffee - 7
+              // order_drinks order 1 tea - 4 words
+              // order_drinks order 1 tea and 1 coffee - 7 words
               int numOfTea = 0, numOfCoffee = 0;
 
-              // Customer order either tea or coffee
+              // Customer orders either tea or coffee
               if (substring.length == 4) {
                 if (substring[3].equals("tea") || substring[3].equals("teas")) {
                   numOfTea = Integer.parseInt(substring[2]);
                   writer.println(numOfTea + " " + substring[3]);
                 } else {
                   numOfCoffee = Integer.parseInt(substring[2]);
+                  // Response to client order received
                   writer.println(numOfCoffee + " " + substring[3]);
                 }
               }
-              // Customer order both tea and coffee
+              // Customer orders both tea and coffee
               else {
                 if (substring[3].equals("tea") || substring[3].equals("teas")) {
                   numOfTea = Integer.parseInt(substring[2]);
@@ -135,6 +143,7 @@ public class HandleCustomer implements Runnable {
                 } else {
                   numOfCoffee = Integer.parseInt(substring[2]);
                   numOfTea = Integer.parseInt(substring[5]);
+                  // Response to client order received
                   writer.println(numOfCoffee + " " + substring[3] + " and " + numOfTea + " " + substring[6]);
                 }
               }
@@ -153,7 +162,6 @@ public class HandleCustomer implements Runnable {
               throw new Exception("Unknown command: " + substring[0]);
           }
         }
-
       } catch (Exception e) {
         writer.println("ERROR " + e.getMessage());
         socket.close();
