@@ -44,10 +44,6 @@ public class Orders {
     }
   }
 
-  public Integer getTotalOrders() {
-    return totalOrders;
-  }
-
   public String getCustomerName() {
     return customerName;
   }
@@ -77,40 +73,50 @@ public class Orders {
     drinkInTray.clear();
   }
 
-  // Retrieve all drinks (tea & coffee) based on state
-  public Map<Integer, String> getDrinkState(String state) {
-    Map<Integer, String> stateType = new HashMap<>();
+  // Retrieve all drinks (tea & coffee) based on Drink State
+  public Map<Integer, String> getDrinkState (String drinkState) {
+    Map<Integer, String> drinkStateType = new HashMap<>();
 
-    if (state.equals(WAIT))
-      stateType = drinkWaiting;
-    else if (state.equals(BREW))
-      stateType = drinkBrewing;
-    else if (state.equals(TRAY))
-      stateType = drinkInTray;
+    if (drinkState.equals(WAIT))
+      drinkStateType = drinkWaiting;
+    else if (drinkState.equals(BREW))
+      drinkStateType = drinkBrewing;
+    else if (drinkState.equals(TRAY))
+      drinkStateType = drinkInTray;
 
-    return stateType;
+    return drinkStateType;
   }
 
-  // Retrieve specific drink type (tea / coffee) and state
-  public ArrayList<Integer> getDrinkState(String drinkType, String state) {
-    Map<Integer, String> stateType = new HashMap<>();
-    ArrayList<Integer> drinkState = new ArrayList<>();
+  // Retrieve specific drink type (tea / coffee) and Drink State
+  public ArrayList<Integer> getDrinkState(String drinkType, String drinkState) {
+    Map<Integer, String> drinkStateType = new HashMap<>();
+    ArrayList<Integer> drinkdrinkState = new ArrayList<>();
 
-    if (state.equals(WAIT))
-      stateType = drinkWaiting;
-    else if (state.equals(BREW))
-      stateType = drinkBrewing;
-    else if (state.equals(TRAY))
-      stateType = drinkInTray;
+    if (drinkState.equals(WAIT))
+      drinkStateType = drinkWaiting;
+    else if (drinkState.equals(BREW))
+      drinkStateType = drinkBrewing;
+    else if (drinkState.equals(TRAY))
+      drinkStateType = drinkInTray;
 
-    if (stateType.size() > 0) {
-      for (Integer key : stateType.keySet()) {
-        if (stateType.get(key).equals(drinkType)) {
-          drinkState.add(key);
+    if (drinkStateType.size() > 0) {
+      for (Integer key : drinkStateType.keySet()) {
+        if (drinkStateType.get(key).equals(drinkType)) {
+          drinkdrinkState.add(key);
         }
       }
     }
-    return drinkState;
+    return drinkdrinkState;
   }
 
+  // Check if customer is Waiting Orders
+  public boolean isWaitingOrder () {
+    boolean isWaiting = false;
+
+    int ordersFulfilling = drinkWaiting.size() + drinkBrewing.size() + drinkInTray.size();
+
+    if (ordersFulfilling > 0) isWaiting = true;
+
+    return isWaiting;
+  }
 }

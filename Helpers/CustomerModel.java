@@ -37,12 +37,12 @@ public class CustomerModel implements AutoCloseable {
     // Read response from Server
     String response = scanner.nextLine();
 
-    // Start independent thread to poll server and check untill all orders are fulfilled
+    // Start independent thread to poll server, untill all orders are fulfilled
     Thread monitorOrder = new Thread(() -> {
       boolean orderFulfilled = false;
 
-      while (orderFulfilled != true) {
-        writer.println("order_fulfilled"); // Invoke "order fulfilled" method in HandleCustomer
+      while (!orderFulfilled) {
+        writer.println("IS_ORDER_FULFILLED"); // Send Command to Server
         if (scanner.nextLine().equals("complete")) {
           // Notify customer and stop thread when all orders are fulfilled
           String orderSplit[] = order.split(" ");
@@ -51,7 +51,7 @@ public class CustomerModel implements AutoCloseable {
             orderCombine.append(orderSplit[i]).append(" ");
           }
           String customerOrder = orderCombine.toString().trim();
-          System.out.println("\n\n[ IMPORTANT ]\nOrder delivered to " + customerName + " (" + customerOrder + ")");
+          System.out.println("\n\n[ ! NOTIFICATION ! ]\nYour order is delivered, " + customerName + " (" + customerOrder + ")");
 
           // Stop thread when order is fulfilled
           orderFulfilled = true;

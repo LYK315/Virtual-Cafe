@@ -12,13 +12,18 @@ public class CoffeeBar {
   private final String WAIT = "waiting";
   private final String BREW = "brewing";
   private final String TRAY = "tray";
+  private ArrayList<String> clientCount = new ArrayList<>();
 
-  // All Orders are Stored Here
+  // All Orders in Cafe Stored Here
   private Map<String, Orders> orders = new TreeMap<>();
 
-  // At Most 2 Tea and Coffee Thread Runs Concurrently
+  // At Most 2 Tea and Coffee Threads Run Concurrently
   private final Semaphore teaSemaphore = new Semaphore(2);
   private final Semaphore coffeeSemaphore = new Semaphore(2);
+
+  public CoffeeBar (ArrayList<String> clientCount){
+    this.clientCount = clientCount;
+  }
 
   // Add New Orders to Coffee Bar (WAITING)
   public void placeOrder(String customerName, int numOfTea, int numOfCoffee) {
@@ -27,6 +32,7 @@ public class CoffeeBar {
     Orders order = new Orders(customerName, numOfTea, numOfCoffee);
     // ADD ANOTHER CONSTRUCTOR FOR USER 2ND ORDER, IMPLEMENT ORDER ID
     orders.put(customerName, order);
+    displayCafeState(); // Display Cafe Status in Server Terminal
   }
 
   // Start Brewing Drinks (WAITING > BREWING)
@@ -46,6 +52,7 @@ public class CoffeeBar {
             synchronized (orders) { // Use lock to avoid race condition
               orders.get(customerName).removeWaiting(drinkID); // Remove tea from WAITING AREA
               orders.get(customerName).setBrewing(drinkID, TEA); // Add tea to BREWING AREA
+              displayCafeState(); // Display Cafe Status in Server Terminal
             }
             Thread.sleep(5000); // 30 seconds to fulfill a tea order
             finishBrewing(customerName, drinkID, TEA); // Handle current tea order fulfilled
@@ -70,6 +77,7 @@ public class CoffeeBar {
             synchronized (orders) { // Use lock to avoid race condition
               orders.get(customerName).removeWaiting(drinkID); // Remove from coffee from WAITING AREA
               orders.get(customerName).setBrewing(drinkID, COFFEE); // Add coffee to BREWING AREA
+              displayCafeState(); // Display Cafe Status in Server Terminal
             }
             Thread.sleep(10000); // 45 seconds to fulfill a coffee order
             finishBrewing(customerName, drinkID, COFFEE); // Handle coffee fulfilled
@@ -89,6 +97,7 @@ public class CoffeeBar {
     synchronized (orders) {
       orders.get(customerName).removeBrewing(drinkID); // Remove drink from BREWING AREA
       orders.get(customerName).setInTray(drinkID, drinkType); // Add drink to TRAY
+      displayCafeState(); // Display Cafe Status in Server Terminal
     }
   }
 
@@ -96,6 +105,7 @@ public class CoffeeBar {
   public void ordersFulfilled(String customerName) {
     synchronized (orders) {
       orders.get(customerName).removeAllInTray();
+      displayCafeState(); // Display Cafe Status in Server Terminal
     }
   }
 
@@ -121,4 +131,45 @@ public class CoffeeBar {
     return orderStatus;
   }
 
+  // Customers Waiting Order to be Delivered
+  public int customerWaiting() {
+    int customersWaiting = 0;
+
+    synchronized (orders) {
+      for (String key : orders.keySet()) {
+        if (orders.get(key).isWaitingOrder())
+          customersWaiting += 1;
+      }
+    }
+
+    return customersWaiting;
+  }
+
+  // All Customer Orders in Each Area (Waiting, Brewing, Tray)
+  public int getAllStatus(String drinkType, String drinkState) {
+    int drinkCount = 0;
+
+    synchronized (orders) {
+      for (String key : orders.keySet()) {
+        drinkCount += orders.get(key).getDrinkState(drinkType, drinkState).size();
+      }
+    }
+
+    return drinkCount;
+  }
+
+  // Method to Display Cafe Status
+  public void displayCafeState() {
+    System.out.println("\nClients in Cafe: " + clientCount.size());
+    System.out.println("Clients Waiting: " + customerWaiting());
+
+    System.out.println("Orders Waiting : " + "Tea(" + getAllStatus(TEA, WAIT) + ") & Coffee("
+        + getAllStatus(COFFEE, WAIT) + ")");
+
+    System.out.println("Orders Brewing : " + "Tea(" + getAllStatus(TEA, BREW) + ") & Coffee("
+        + getAllStatus(COFFEE, BREW) + ")");
+
+    System.out.println("Orders in Tray : " + "Tea(" + getAllStatus(TEA, TRAY) + ") & Coffee("
+        + getAllStatus(COFFEE, TRAY) + ")\n");
+  }
 }

@@ -34,19 +34,19 @@ public class Customer {
               "****************************************");
           System.out.print("Enter a Command: ");
 
-          // Get user Input
+          // Get User Input
           choice = input.nextLine().toLowerCase();
           String[] substring = choice.split(" ");
 
-          // Handle user input
+          // Handle User Input
           switch (substring[0]) {
             case "order":
-              // Handle order status
+              // Handle Order Status
               if (substring[1].equals("status")) {
                 // Retrieve all order status
                 String[] orderStatus = customer.getOrderStatus(customerName);
 
-                // Print all order status
+                // Print All Order Status
                 System.out.println("\n[ RESULT SHOWN BELOW ]");
                 if (orderStatus.length == 0) {
                   System.out.println("Oops, no new order found for " + customerName);
@@ -59,7 +59,7 @@ public class Customer {
                 System.out.println("\nPress enter to continue..\n\n");
                 input.nextLine();
               }
-              // Handle order drinks
+              // Handle Order Drinks
               else {
                 String order = customer.orderDrinks(choice, customerName);
                 System.out.println("\n[ RESULT SHOWN BELOW ]");
@@ -69,14 +69,14 @@ public class Customer {
               }
               break;
 
-            // User exits the cafe
+            // User Exits The Cafe
             case "exit":
               customer.exitCafe();
               input.close();
               System.out.println("\nBye Bye, " + customerName + ".");
               break;
 
-            // User typed a wrong command
+            // User Typed a Wrong Command
             default:
               System.out.println("\n[ RESULT SHOWN BELOW ]");
               System.out.println("Unknown Command: " + choice);

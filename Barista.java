@@ -1,12 +1,15 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+
 import Helpers.CoffeeBar;
 import Helpers.HandleCustomer;
 
 public class Barista {
   private final static int port = 8888;
-  private final static CoffeeBar coffeeBar = new CoffeeBar();
+  private static ArrayList<String> clientCount = new ArrayList<>();
+  private final static CoffeeBar coffeeBar = new CoffeeBar(clientCount);
 
   // Main method to run the program, a.k.a 'server', a.k.a 'barista'
   public static void main(String[] args) {
@@ -24,13 +27,17 @@ public class Barista {
       System.out.println("Waiting for Customers...");
 
       // Server & Client are both seperated processes.
-      // If multiple client connects to server, 'Server Process' will have multiple threads to handle different clients. 
-      while (true){
+      // If multiple client connects to server, 'Server Process' will have multiple
+      // threads to handle different clients.
+      while (true) {
         // Socket stays in blocked state untill a customer is connected
         Socket socket = serverSocket.accept();
 
+        // Append new customer
+        clientCount.add(Integer.toString(socket.getPort()));
+
         // Start independant thread for new joined customer
-        new Thread(new HandleCustomer(socket, coffeeBar)).start();
+        new Thread(new HandleCustomer(socket, coffeeBar, clientCount)).start();
       }
     } catch (IOException e) {
       e.printStackTrace();
