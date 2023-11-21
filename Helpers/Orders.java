@@ -11,15 +11,12 @@ public class Orders {
   private final String BREW = "brewing";
   private final String TRAY = "tray";
 
-  private final String customerName;
   private int numOfTea = 0, numOfCoffee = 0, totalOrders = 0;
-
   private Map<Integer, String> drinkWaiting = new HashMap<>();
   private Map<Integer, String> drinkBrewing = new HashMap<>();
   private Map<Integer, String> drinkInTray = new HashMap<>();
 
-  public Orders(String customerName, int numOfTea, int numOfCoffee) {
-    this.customerName = customerName;
+  public Orders(int numOfTea, int numOfCoffee) {
     this.numOfTea = numOfTea;
     this.numOfCoffee = numOfCoffee;
     addTeaOrders();
@@ -42,10 +39,6 @@ public class Orders {
       }
       totalOrders += numOfCoffee;
     }
-  }
-
-  public String getCustomerName() {
-    return customerName;
   }
 
   // Methods to handle Waiting, Brewing, Tray Area
@@ -74,7 +67,7 @@ public class Orders {
   }
 
   // Retrieve all drinks (tea & coffee) based on Drink State
-  public Map<Integer, String> getDrinkState (String drinkState) {
+  public Map<Integer, String> getDrinkState(String drinkState) {
     Map<Integer, String> drinkStateType = new HashMap<>();
 
     if (drinkState.equals(WAIT))
@@ -87,7 +80,7 @@ public class Orders {
     return drinkStateType;
   }
 
-  // Retrieve specific drink type (tea / coffee) and Drink State
+  // Retrieve specific drink type (tea / coffee) based on Drink State
   public ArrayList<Integer> getDrinkState(String drinkType, String drinkState) {
     Map<Integer, String> drinkStateType = new HashMap<>();
     ArrayList<Integer> drinkdrinkState = new ArrayList<>();
@@ -110,12 +103,13 @@ public class Orders {
   }
 
   // Check if customer is Waiting Orders
-  public boolean isWaitingOrder () {
+  public boolean isWaitingOrder() {
     boolean isWaiting = false;
 
     int ordersFulfilling = drinkWaiting.size() + drinkBrewing.size() + drinkInTray.size();
 
-    if (ordersFulfilling > 0) isWaiting = true;
+    if (ordersFulfilling > 0)
+      isWaiting = true;
 
     return isWaiting;
   }

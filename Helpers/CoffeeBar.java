@@ -21,25 +21,26 @@ public class CoffeeBar {
   private final Semaphore teaSemaphore = new Semaphore(2);
   private final Semaphore coffeeSemaphore = new Semaphore(2);
 
+  // Constrcutor to store clients list
   public CoffeeBar (ArrayList<String> clientCount){
     this.clientCount = clientCount;
   }
 
   // Add New Orders to Coffee Bar (WAITING)
-  public void placeOrder(String customerName, int numOfTea, int numOfCoffee) {
+  public void placeOrder(String clientSocket, int numOfTea, int numOfCoffee) {
     // Check if customer has previous order, add new order instance if no, else
     // append order to previous order
-    Orders order = new Orders(customerName, numOfTea, numOfCoffee);
+    Orders order = new Orders(numOfTea, numOfCoffee);
     // ADD ANOTHER CONSTRUCTOR FOR USER 2ND ORDER, IMPLEMENT ORDER ID
-    orders.put(customerName, order);
+    orders.put(clientSocket, order);
     displayCafeState(); // Display Cafe Status in Server Terminal
   }
 
-  // Start Brewing Drinks (WAITING > BREWING)
-  public void startBrewing(String customerName) {
+  // Start Brewing Orders (WAITING > BREWING)
+  public void startBrewing(String clientSocket) {
     // Get teas and coffees in WAITING AREA
-    final ArrayList<Integer> teaWaiting = orders.get(customerName).getDrinkState(TEA, WAIT);
-    final ArrayList<Integer> coffeeWaiting = orders.get(customerName).getDrinkState(COFFEE, WAIT);
+    final ArrayList<Integer> teaWaiting = orders.get(clientSocket).getDrinkState(TEA, WAIT);
+    final ArrayList<Integer> coffeeWaiting = orders.get(clientSocket).getDrinkState(COFFEE, WAIT);
 
     // Brew Tea
     if (teaWaiting.size() > 0) {
@@ -50,12 +51,12 @@ public class CoffeeBar {
           try {
             teaSemaphore.acquire(); // At most 2 tea brew concurrently
             synchronized (orders) { // Use lock to avoid race condition
-              orders.get(customerName).removeWaiting(drinkID); // Remove tea from WAITING AREA
-              orders.get(customerName).setBrewing(drinkID, TEA); // Add tea to BREWING AREA
+              orders.get(clientSocket).removeWaiting(drinkID); // Remove tea from WAITING AREA
+              orders.get(clientSocket).setBrewing(drinkID, TEA); // Add tea to BREWING AREA
               displayCafeState(); // Display Cafe Status in Server Terminal
             }
             Thread.sleep(5000); // 30 seconds to fulfill a tea order
-            finishBrewing(customerName, drinkID, TEA); // Handle current tea order fulfilled
+            finishBrewing(clientSocket, drinkID, TEA); // Handle current tea order fulfilled
           } catch (InterruptedException e) {
             e.printStackTrace();
           } finally {
@@ -75,12 +76,12 @@ public class CoffeeBar {
           try {
             coffeeSemaphore.acquire(); // At most 2 coffee brew concurrently
             synchronized (orders) { // Use lock to avoid race condition
-              orders.get(customerName).removeWaiting(drinkID); // Remove from coffee from WAITING AREA
-              orders.get(customerName).setBrewing(drinkID, COFFEE); // Add coffee to BREWING AREA
+              orders.get(clientSocket).removeWaiting(drinkID); // Remove from coffee from WAITING AREA
+              orders.get(clientSocket).setBrewing(drinkID, COFFEE); // Add coffee to BREWING AREA
               displayCafeState(); // Display Cafe Status in Server Terminal
             }
             Thread.sleep(10000); // 45 seconds to fulfill a coffee order
-            finishBrewing(customerName, drinkID, COFFEE); // Handle coffee fulfilled
+            finishBrewing(clientSocket, drinkID, COFFEE); // Handle coffee fulfilled
           } catch (InterruptedException e) {
             e.printStackTrace();
           } finally {
@@ -92,38 +93,38 @@ public class CoffeeBar {
     }
   }
 
-  // Finish Brewing Drinks (BREWING > TRAY)
-  public void finishBrewing(String customerName, Integer drinkID, String drinkType) {
+  // Orders Finished Brewing (BREWING > TRAY)
+  public void finishBrewing(String clientSocket, Integer drinkID, String drinkType) {
     synchronized (orders) {
-      orders.get(customerName).removeBrewing(drinkID); // Remove drink from BREWING AREA
-      orders.get(customerName).setInTray(drinkID, drinkType); // Add drink to TRAY
+      orders.get(clientSocket).removeBrewing(drinkID); // Remove drink from BREWING AREA
+      orders.get(clientSocket).setInTray(drinkID, drinkType); // Add drink to TRAY
       displayCafeState(); // Display Cafe Status in Server Terminal
     }
   }
 
-  // All Orders Fulfiled (REMOVE ALL DRINKS IN TRAY)
-  public void ordersFulfilled(String customerName) {
+  // All Orders Fulfilled (REMOVE ALL DRINKS IN TRAY)
+  public void ordersFulfilled(String clientSocket) {
     synchronized (orders) {
-      orders.get(customerName).removeAllInTray();
+      orders.get(clientSocket).removeAllInTray();
       displayCafeState(); // Display Cafe Status in Server Terminal
     }
   }
 
   // Retrieve Order Status
-  public Map<String, Integer> getOrderStatus(String customerName) {
+  public Map<String, Integer> getOrderStatus(String clientSocket) {
     Map<String, Integer> orderStatus = new HashMap<>();
 
     synchronized (orders) {
-      if (!orders.isEmpty() && orders.containsKey(customerName)) {
+      if (!orders.isEmpty() && orders.containsKey(clientSocket)) {
         // Retrieve Tea orders
-        orderStatus.put("tea_waiting", orders.get(customerName).getDrinkState(TEA, WAIT).size());
-        orderStatus.put("tea_brewing", orders.get(customerName).getDrinkState(TEA, BREW).size());
-        orderStatus.put("tea_tray", orders.get(customerName).getDrinkState(TEA, TRAY).size());
+        orderStatus.put("tea_waiting", orders.get(clientSocket).getDrinkState(TEA, WAIT).size());
+        orderStatus.put("tea_brewing", orders.get(clientSocket).getDrinkState(TEA, BREW).size());
+        orderStatus.put("tea_tray", orders.get(clientSocket).getDrinkState(TEA, TRAY).size());
 
         // Retrieve Coffee orders
-        orderStatus.put("coffee_waiting", orders.get(customerName).getDrinkState(COFFEE, WAIT).size());
-        orderStatus.put("coffee_brewing", orders.get(customerName).getDrinkState(COFFEE, BREW).size());
-        orderStatus.put("coffee_tray", orders.get(customerName).getDrinkState(COFFEE, TRAY).size());
+        orderStatus.put("coffee_waiting", orders.get(clientSocket).getDrinkState(COFFEE, WAIT).size());
+        orderStatus.put("coffee_brewing", orders.get(clientSocket).getDrinkState(COFFEE, BREW).size());
+        orderStatus.put("coffee_tray", orders.get(clientSocket).getDrinkState(COFFEE, TRAY).size());
       }
     }
 
@@ -131,7 +132,7 @@ public class CoffeeBar {
     return orderStatus;
   }
 
-  // Customers Waiting Order to be Delivered
+  // All Customers Waiting Order to be Delivered
   public int customerWaiting() {
     int customersWaiting = 0;
 
@@ -145,7 +146,7 @@ public class CoffeeBar {
     return customersWaiting;
   }
 
-  // All Customer Orders in Each Area (Waiting, Brewing, Tray)
+  // All Customers Orders in Each Area (Waiting, Brewing, Tray)
   public int getAllStatus(String drinkType, String drinkState) {
     int drinkCount = 0;
 

@@ -44,7 +44,7 @@ public class Customer {
               // Handle Order Status
               if (substring[1].equals("status")) {
                 // Retrieve all order status
-                String[] orderStatus = customer.getOrderStatus(customerName);
+                String[] orderStatus = customer.getOrderStatus();
 
                 // Print All Order Status
                 System.out.println("\n[ RESULT SHOWN BELOW ]");

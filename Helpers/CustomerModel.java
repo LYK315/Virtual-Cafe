@@ -69,7 +69,7 @@ public class CustomerModel implements AutoCloseable {
   }
 
   // Handle Order Status
-  public String[] getOrderStatus(String customerName) {
+  public String[] getOrderStatus() {
     // Send command to Server
     writer.println("ORDER_STATUS");
 

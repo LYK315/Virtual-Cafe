@@ -21,6 +21,7 @@ public class HandleCustomer implements Runnable {
   @Override
   public void run() {
     String customerName = null;
+    final String clientSocket = clientCount.get(clientCount.size() - 1);
 
     // Try to set up connection with client via socket
     try {
@@ -32,7 +33,7 @@ public class HandleCustomer implements Runnable {
       try {
         // Read and output customer name
         customerName = scanner.nextLine();
-        System.out.println(customerName + " entered the Cafe.");
+        System.out.println(customerName + "(" + clientSocket + ") entered the Cafe.");
 
         // Response with success state to Client
         writer.println("SUCCESS");
@@ -48,22 +49,21 @@ public class HandleCustomer implements Runnable {
               int teaInTray = 0, coffeeInTray = 0, totalOrders = 0;
 
               // Retrive all drink status
-              Map<String, Integer> orderState = coffeeBar.getOrderStatus(customerName);
+              Map<String, Integer> orderState = coffeeBar.getOrderStatus(clientSocket);
 
               synchronized (orderState) {
                 if (!orderState.isEmpty()) {
-                  totalOrders = 
-                  orderState.get("tea_waiting").intValue() + orderState.get("tea_brewing").intValue() +
-                  orderState.get("tea_tray").intValue() + orderState.get("coffee_waiting").intValue() +
-                  orderState.get("coffee_brewing").intValue() + orderState.get("coffee_tray").intValue();
-                  
+                  totalOrders = orderState.get("tea_waiting").intValue() + orderState.get("tea_brewing").intValue() +
+                      orderState.get("tea_tray").intValue() + orderState.get("coffee_waiting").intValue() +
+                      orderState.get("coffee_brewing").intValue() + orderState.get("coffee_tray").intValue();
+
                   teaInTray = orderState.get("tea_tray").intValue();
                   coffeeInTray = orderState.get("coffee_tray").intValue();
 
                   // Check if all drinks are already in the TRAY AREA
                   if (teaInTray + coffeeInTray == totalOrders) {
                     writer.println("complete"); // Update client if all order is fulfilled
-                    coffeeBar.ordersFulfilled(customerName); // Delete all drinks in TRAY AREA
+                    coffeeBar.ordersFulfilled(clientSocket); // Delete all drinks in TRAY AREA
                   } else {
                     writer.println("Havent complete..");
                   }
@@ -78,7 +78,7 @@ public class HandleCustomer implements Runnable {
               int teaWaiting = 0, teaBrewing = 0, teaTray = 0;
               int coffeeWaiting = 0, coffeeBrewing = 0, coffeeTray = 0;
               // Retrive all drink status
-              Map<String, Integer> orderStatus = coffeeBar.getOrderStatus(customerName);
+              Map<String, Integer> orderStatus = coffeeBar.getOrderStatus(clientSocket);
 
               // Check if customer has orders in the coffee bar
               if (!orderStatus.isEmpty()) {
@@ -187,8 +187,8 @@ public class HandleCustomer implements Runnable {
               }
 
               // Place order to Coffee Bar
-              coffeeBar.placeOrder(customerName, numOfTea, numOfCoffee);
-              coffeeBar.startBrewing(customerName);
+              coffeeBar.placeOrder(clientSocket, numOfTea, numOfCoffee);
+              coffeeBar.startBrewing(clientSocket);
 
               break;
 
@@ -210,13 +210,13 @@ public class HandleCustomer implements Runnable {
       // If client left by CTRL+C or Lost Connection
       if (lostConnection) {
         clientCount.remove(clientCount.get(clientCount.size() - 1));
-        System.out.println("[Lost Connection] " + customerName + " disappeared.");
+        System.out.println("[Lost Connection] " + customerName + "(" + clientSocket + ") disappeared.");
         coffeeBar.displayCafeState(); // Display Cafe Status in Server Terminal
-      } 
+      }
       // If client left by using exit command
       else {
         clientCount.remove(clientCount.get(clientCount.size() - 1));
-        System.out.println(customerName + " left the Cafe.");
+        System.out.println(customerName + "(" + clientSocket + ") left the Cafe.");
         coffeeBar.displayCafeState(); // Display Cafe Status in Server Terminal
       }
     }
