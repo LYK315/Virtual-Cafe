@@ -190,4 +190,9 @@ public class CoffeeBar {
     System.out.println("Orders in Tray : " + "Tea(" + getAllStatus(TEA, TRAY) + ") & Coffee("
         + getAllStatus(COFFEE, TRAY) + ")\n");
   }
+
+  // Remove Client if Disconnected
+  public void removeClient(String clientSocket) {
+    orders.remove(clientSocket);
+  }
 }

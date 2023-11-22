@@ -212,12 +212,14 @@ public class HandleCustomer implements Runnable {
       if (lostConnection) {
         clientCount.remove(clientCount.get(clientCount.size() - 1));
         System.out.println("[Lost Connection] " + customerName + "(" + clientSocket + ") disappeared.");
+        coffeeBar.removeClient(clientSocket); // Remove client from Coffee Bar
         coffeeBar.displayCafeState(); // Display Cafe Status in Server Terminal
       }
       // If client left by using exit command
       else {
         clientCount.remove(clientCount.get(clientCount.size() - 1));
         System.out.println(customerName + "(" + clientSocket + ") left the Cafe.");
+        coffeeBar.removeClient(clientSocket); // Remove client from Coffee Bar
         coffeeBar.displayCafeState(); // Display Cafe Status in Server Terminal
       }
     }

@@ -3,6 +3,7 @@ import Helpers.CustomerModel;
 
 public class Customer {
   private static String choice = "";
+  private static boolean properExit = false;
 
   public static void main(String[] args) {
 
@@ -12,6 +13,14 @@ public class Customer {
     try {
       Scanner input = new Scanner(System.in);
       String customerName = input.nextLine();
+
+      // To Intercept and Handle SIGINT (CTRL + C) Signal
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        if (!properExit) {
+          System.out.println("\nReceived termination signal (SIGTERM).\n");
+          System.out.println("Byebye, come again, " + customerName + ".\n");
+        }
+      }));
 
       // Try to set up connection with Server
       try (CustomerModel customer = new CustomerModel(customerName)) {
@@ -76,9 +85,10 @@ public class Customer {
 
             // User Exits The Cafe
             case "exit":
+              properExit = true;
               customer.exitCafe();
               input.close();
-              System.out.println("\nBye Bye, " + customerName + ".");
+              System.out.println("\nBye Bye, " + customerName + ".\n");
               break;
 
             // User Typed a Wrong Command
