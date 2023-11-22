@@ -90,7 +90,7 @@ public class Orders {
   // Retrieve specific drink type (tea / coffee) based on Drink State
   public ArrayList<Integer> getDrinkState(String drinkType, String drinkState) {
     Map<Integer, String> drinkStateType = new HashMap<>();
-    ArrayList<Integer> drinkdrinkState = new ArrayList<>();
+    ArrayList<Integer> orderInState = new ArrayList<>();
 
     if (drinkState.equals(WAIT))
       drinkStateType = drinkWaiting;
@@ -102,22 +102,11 @@ public class Orders {
     if (drinkStateType.size() > 0) {
       for (Integer key : drinkStateType.keySet()) {
         if (drinkStateType.get(key).equals(drinkType)) {
-          drinkdrinkState.add(key);
+          orderInState.add(key);
         }
       }
     }
-    return drinkdrinkState;
+    return orderInState;
   }
 
-  // Check if customer is Waiting Orders
-  public boolean isWaitingOrder() {
-    boolean isWaiting = false;
-
-    int ordersFulfilling = drinkWaiting.size() + drinkBrewing.size() + drinkInTray.size();
-
-    if (ordersFulfilling > 0)
-      isWaiting = true;
-
-    return isWaiting;
-  }
 }

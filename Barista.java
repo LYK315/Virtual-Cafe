@@ -1,15 +1,16 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.TreeMap;
 
 import Helpers.CoffeeBar;
 import Helpers.HandleCustomer;
 
 public class Barista {
   private final static int port = 8888;
-  private static ArrayList<String> clientCount = new ArrayList<>();
+  private static TreeMap<String, String> clientCount = new TreeMap<>();
   private final static CoffeeBar coffeeBar = new CoffeeBar(clientCount);
+  private final static String IDLE = "idle";
 
   // Main method to run the program, a.k.a 'server', a.k.a 'barista'
   public static void main(String[] args) {
@@ -33,8 +34,8 @@ public class Barista {
         // Socket stays in blocked state untill a customer is connected
         Socket socket = serverSocket.accept();
 
-        // Append new customer
-        clientCount.add(Integer.toString(socket.getPort()));
+        // Append new customer in Cafe
+        clientCount.put(Integer.toString(socket.getPort()), IDLE);
 
         // Start independant thread for new joined customer
         new Thread(new HandleCustomer(socket, coffeeBar, clientCount)).start();

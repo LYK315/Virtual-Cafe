@@ -1,18 +1,17 @@
 package Helpers;
-
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.TreeMap;
 
 public class HandleCustomer implements Runnable {
   private final Socket socket;
   private CoffeeBar coffeeBar;
   private boolean lostConnection = true;
-  private ArrayList<String> clientCount = new ArrayList<>();
+  private TreeMap<String, String> clientCount = new TreeMap<>();
 
-  public HandleCustomer(Socket socket, CoffeeBar coffeeBar, ArrayList<String> clientCount) {
+  public HandleCustomer(Socket socket, CoffeeBar coffeeBar, TreeMap<String, String> clientCount) {
     this.socket = socket;
     this.coffeeBar = coffeeBar;
     this.clientCount = clientCount;
@@ -21,22 +20,21 @@ public class HandleCustomer implements Runnable {
   @Override
   public void run() {
     String customerName = null;
-    final String clientSocket = clientCount.get(clientCount.size() - 1);
+    final String clientSocket = clientCount.lastKey();
 
     // Try to set up connection with client via socket
     try {
       Scanner scanner = new Scanner(socket.getInputStream());
       PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-      coffeeBar.displayCafeState(); // Display Cafe Status in Server Terminal
 
       // Try to read customr name (sent from client)
       try {
         // Read and output customer name
         customerName = scanner.nextLine();
         System.out.println(customerName + "(" + clientSocket + ") entered the Cafe.");
+        coffeeBar.displayCafeState(); // Display Cafe Status in Server Terminal
 
-        // Response with success state to Client
-        writer.println("SUCCESS");
+        writer.println("SUCCESS"); // Response with success state to Client
 
         // Handle Orders / Requests from Customer
         while (true) {
@@ -53,23 +51,27 @@ public class HandleCustomer implements Runnable {
 
               synchronized (orderState) {
                 if (!orderState.isEmpty()) {
+                  // Total Orders
                   totalOrders = orderState.get("tea_waiting").intValue() + orderState.get("tea_brewing").intValue() +
                       orderState.get("tea_tray").intValue() + orderState.get("coffee_waiting").intValue() +
                       orderState.get("coffee_brewing").intValue() + orderState.get("coffee_tray").intValue();
 
-                  teaInTray = orderState.get("tea_tray").intValue();
-                  coffeeInTray = orderState.get("coffee_tray").intValue();
+                  teaInTray = orderState.get("tea_tray").intValue(); // Tea Count in Tray
+                  coffeeInTray = orderState.get("coffee_tray").intValue(); // Coffee Count in Tray
 
                   // Check if all drinks are already in the TRAY AREA
                   if (teaInTray + coffeeInTray == totalOrders) {
-                    writer.println("complete"); // Update client if all order is fulfilled
-                    writer.println(teaInTray + " " + coffeeInTray); // Tell client what order is fulfilled
-                    coffeeBar.ordersFulfilled(clientSocket); // Delete all drinks in TRAY AREA
+                    // If Customer is Still in the Cafe
+                    if (clientCount.containsKey(clientSocket)) {
+                      writer.println("complete"); // Update client order is complete
+                      writer.println(teaInTray + " " + coffeeInTray); // Tell client what order is fulfilled
+                      coffeeBar.ordersFulfilled(clientSocket); // Delete all drinks in TRAY AREA
+                    }
                   } else {
-                    writer.println("Havent complete..");
+                    writer.println("Havent Complete..");
                   }
                 } else {
-                  writer.println("Monitoring..");
+                  writer.println("Opps, No Order Found..");
                 }
               }
               break;
@@ -89,6 +91,7 @@ public class HandleCustomer implements Runnable {
                 coffeeWaiting = orderStatus.get("coffee_waiting").intValue();
                 coffeeBrewing = orderStatus.get("coffee_brewing").intValue();
                 coffeeTray = orderStatus.get("coffee_tray").intValue();
+
                 // Check if either AREA is empty (client will not read that AREA if empty)
                 if (teaWaiting + coffeeWaiting > 0) {
                   numOfArea += 1;
@@ -189,6 +192,8 @@ public class HandleCustomer implements Runnable {
 
               // Place order to Coffee Bar
               String isAddOn = coffeeBar.placeOrder(clientSocket, numOfTea, numOfCoffee);
+
+              // Let cient know if order is add on
               writer.println(isAddOn);
 
               break;
@@ -210,14 +215,14 @@ public class HandleCustomer implements Runnable {
     } finally {
       // If client left by CTRL+C or Lost Connection
       if (lostConnection) {
-        clientCount.remove(clientCount.get(clientCount.size() - 1));
+        clientCount.remove(clientCount.get(clientSocket));
         System.out.println("[Lost Connection] " + customerName + "(" + clientSocket + ") disappeared.");
         coffeeBar.removeClient(clientSocket); // Remove client from Coffee Bar
         coffeeBar.displayCafeState(); // Display Cafe Status in Server Terminal
       }
       // If client left by using exit command
       else {
-        clientCount.remove(clientCount.get(clientCount.size() - 1));
+        clientCount.remove(clientCount.get(clientSocket));
         System.out.println(customerName + "(" + clientSocket + ") left the Cafe.");
         coffeeBar.removeClient(clientSocket); // Remove client from Coffee Bar
         coffeeBar.displayCafeState(); // Display Cafe Status in Server Terminal

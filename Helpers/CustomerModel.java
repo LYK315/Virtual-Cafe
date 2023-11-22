@@ -1,5 +1,4 @@
 package Helpers;
-
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
@@ -45,12 +44,15 @@ public class CustomerModel implements AutoCloseable {
 
       while (!orderFulfilled) {
         writer.println("IS_ORDER_FULFILLED"); // Send Command to Server
+
+        // Notify customer and stop polling when all orders are fulfilled
         if (scanner.nextLine().equals("complete")) {
-          // Notify customer and stop thread when all orders are fulfilled
-          String customerOrder = "", teaPlural = "", coffeePlural = "";
           String orderSplit[] = scanner.nextLine().split(" ");
           int teaCount = Integer.parseInt(orderSplit[0]); // Number of tea
           int coffeeCount = Integer.parseInt(orderSplit[1]); // Numer of coffee
+
+          // Display msg accordingly
+          String customerOrder = "", teaPlural = "", coffeePlural = "";
           if (teaCount > 0) {
             teaPlural = teaCount > 1 ? "teas" : "tea"; // Set plural of tea
             if (coffeeCount > 0) {
@@ -63,26 +65,25 @@ public class CustomerModel implements AutoCloseable {
             coffeePlural = coffeeCount > 1 ? "coffees" : "coffee"; // Set plural of coffee
             customerOrder = coffeeCount + " " + coffeePlural;
           }
-          System.out.println(
-              "\n\n[ ! NOTIFICATION ! ]\nDear " + customerName + ", your order is delivered (" + customerOrder + ")");
+          System.out.println("\n\n[ ! NOTIFICATION ! ]\nDear " +
+              customerName + ", your order is delivered (" + customerOrder + ")");
 
-          // Stop thread when order is fulfilled
-          orderFulfilled = true;
+          orderFulfilled = true; // Stop thread when order is fulfilled
         }
         try {
-          Thread.sleep(30500); // Check with server every 30.5 sec
+          Thread.sleep(15000); // Poll server every 15 sec
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
       }
     });
-    
+
     // Start thread after customer places an order
     if (isAddOn.equals("false")) {
       monitorOrder.start();
     }
 
-    return (orderReply + "," + isAddOn);
+    return (orderReply + "," + isAddOn); // Let client know if order is add on, display msg accordingly
   }
 
   // Handle Order Status
