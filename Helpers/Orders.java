@@ -23,6 +23,13 @@ public class Orders {
     addCoffeeOrders();
   }
 
+  public void addOnOrders(int numOfTea, int numOfCoffee) {
+    this.numOfTea = numOfTea;
+    this.numOfCoffee = numOfCoffee;
+    addTeaOrders();
+    addCoffeeOrders();
+  }
+
   public void addTeaOrders() {
     if (numOfTea > 0) {
       for (int drinkID = totalOrders; drinkID < (numOfTea + totalOrders); drinkID++) {

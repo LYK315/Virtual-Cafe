@@ -63,6 +63,7 @@ public class HandleCustomer implements Runnable {
                   // Check if all drinks are already in the TRAY AREA
                   if (teaInTray + coffeeInTray == totalOrders) {
                     writer.println("complete"); // Update client if all order is fulfilled
+                    writer.println(teaInTray + " " + coffeeInTray); // Tell client what order is fulfilled
                     coffeeBar.ordersFulfilled(clientSocket); // Delete all drinks in TRAY AREA
                   } else {
                     writer.println("Havent complete..");
@@ -187,8 +188,8 @@ public class HandleCustomer implements Runnable {
               }
 
               // Place order to Coffee Bar
-              coffeeBar.placeOrder(clientSocket, numOfTea, numOfCoffee);
-              coffeeBar.startBrewing(clientSocket);
+              String isAddOn = coffeeBar.placeOrder(clientSocket, numOfTea, numOfCoffee);
+              writer.println(isAddOn);
 
               break;
 

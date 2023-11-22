@@ -35,9 +35,11 @@ public class CustomerModel implements AutoCloseable {
     writer.println("ORDER_DRINKS " + order);
 
     // Read response from Server
-    String response = scanner.nextLine();
+    String orderReply, isAddOn;
+    orderReply = scanner.nextLine();
+    isAddOn = scanner.nextLine();
 
-    // Start independent thread to poll server, untill all orders are fulfilled
+    // Independent thread to poll server, untill all orders are fulfilled
     Thread monitorOrder = new Thread(() -> {
       boolean orderFulfilled = false;
 
@@ -45,27 +47,42 @@ public class CustomerModel implements AutoCloseable {
         writer.println("IS_ORDER_FULFILLED"); // Send Command to Server
         if (scanner.nextLine().equals("complete")) {
           // Notify customer and stop thread when all orders are fulfilled
-          String orderSplit[] = order.split(" ");
-          StringBuilder orderCombine = new StringBuilder();
-          for (int i = 1; i < orderSplit.length; i++) {
-            orderCombine.append(orderSplit[i]).append(" ");
+          String customerOrder = "", teaPlural = "", coffeePlural = "";
+          String orderSplit[] = scanner.nextLine().split(" ");
+          int teaCount = Integer.parseInt(orderSplit[0]); // Number of tea
+          int coffeeCount = Integer.parseInt(orderSplit[1]); // Numer of coffee
+          if (teaCount > 0) {
+            teaPlural = teaCount > 1 ? "teas" : "tea"; // Set plural of tea
+            if (coffeeCount > 0) {
+              coffeePlural = coffeeCount > 1 ? "coffees" : "coffee"; // Set plural of coffee
+              customerOrder = teaCount + " " + teaPlural + " and " + coffeeCount + " " + coffeePlural;
+            } else {
+              customerOrder = teaCount + " " + teaPlural;
+            }
+          } else {
+            coffeePlural = coffeeCount > 1 ? "coffees" : "coffee"; // Set plural of coffee
+            customerOrder = coffeeCount + " " + coffeePlural;
           }
-          String customerOrder = orderCombine.toString().trim();
-          System.out.println("\n\n[ ! NOTIFICATION ! ]\nYour order is delivered, " + customerName + " (" + customerOrder + ")");
+          System.out.println(
+              "\n\n[ ! NOTIFICATION ! ]\nDear " + customerName + ", your order is delivered (" + customerOrder + ")");
 
           // Stop thread when order is fulfilled
           orderFulfilled = true;
         }
         try {
-          Thread.sleep(4000); // Check with server every 30.8 sec
+          Thread.sleep(30500); // Check with server every 30.5 sec
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
       }
     });
-    monitorOrder.start(); // Start thread after customer places an order
+    
+    // Start thread after customer places an order
+    if (isAddOn.equals("false")) {
+      monitorOrder.start();
+    }
 
-    return response;
+    return (orderReply + "," + isAddOn);
   }
 
   // Handle Order Status

@@ -62,8 +62,13 @@ public class Customer {
               // Handle Order Drinks
               else {
                 String order = customer.orderDrinks(choice, customerName);
+                String orderSplit[] = order.split(",");
                 System.out.println("\n[ RESULT SHOWN BELOW ]");
-                System.out.println("Order received from " + customerName + " (" + order + ")");
+                if (orderSplit[1].equals("true")) {
+                  System.out.println("Add-On Order received from " + customerName + " (" + orderSplit[0] + ")");
+                } else {
+                  System.out.println("Order received from " + customerName + " (" + orderSplit[0] + ")");
+                }
                 System.out.println("\nPress enter to continue..\n\n");
                 input.nextLine();
               }

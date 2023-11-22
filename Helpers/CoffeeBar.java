@@ -13,6 +13,7 @@ public class CoffeeBar {
   private final String BREW = "brewing";
   private final String TRAY = "tray";
   private ArrayList<String> clientCount = new ArrayList<>();
+  private Map<String, ArrayList<Integer>> startedThread = new HashMap<>();
 
   // All Orders in Cafe Stored Here
   private Map<String, Orders> orders = new TreeMap<>();
@@ -22,48 +23,64 @@ public class CoffeeBar {
   private final Semaphore coffeeSemaphore = new Semaphore(2);
 
   // Constrcutor to store clients list
-  public CoffeeBar (ArrayList<String> clientCount){
+  public CoffeeBar(ArrayList<String> clientCount) {
     this.clientCount = clientCount;
   }
 
   // Add New Orders to Coffee Bar (WAITING)
-  public void placeOrder(String clientSocket, int numOfTea, int numOfCoffee) {
+  public String placeOrder(String clientSocket, int numOfTea, int numOfCoffee) {
+    String isAddOn = "false";
     // Check if customer has previous order, add new order instance if no, else
     // append order to previous order
-    Orders order = new Orders(numOfTea, numOfCoffee);
-    // ADD ANOTHER CONSTRUCTOR FOR USER 2ND ORDER, IMPLEMENT ORDER ID
-    orders.put(clientSocket, order);
+    synchronized (orders) {
+      if (orders.containsKey(clientSocket)) {
+        isAddOn = "true";
+        orders.get(clientSocket).addOnOrders(numOfTea, numOfCoffee);
+      } else {
+        Orders order = new Orders(numOfTea, numOfCoffee);
+        orders.put(clientSocket, order);
+      }
+      startBrewing(clientSocket); // Add order into Queue and Start Brewing
+    }
     displayCafeState(); // Display Cafe Status in Server Terminal
+
+    return isAddOn;
   }
 
   // Start Brewing Orders (WAITING > BREWING)
   public void startBrewing(String clientSocket) {
-    // Get teas and coffees in WAITING AREA
+    // Get drink ID of teas and coffees in WAITING AREA
     final ArrayList<Integer> teaWaiting = orders.get(clientSocket).getDrinkState(TEA, WAIT);
     final ArrayList<Integer> coffeeWaiting = orders.get(clientSocket).getDrinkState(COFFEE, WAIT);
+
+    // Append Client Socket Key to startedThread it is not already in the Map
+    startedThread.putIfAbsent(clientSocket, new ArrayList<Integer>());
 
     // Brew Tea
     if (teaWaiting.size() > 0) {
       // Loop through "teaWaiting" (TEA WAITING AREA)
       for (Integer drinkID : teaWaiting) {
-        // Thread to Brew Tea
-        Thread brewTea = new Thread(() -> {
-          try {
-            teaSemaphore.acquire(); // At most 2 tea brew concurrently
-            synchronized (orders) { // Use lock to avoid race condition
-              orders.get(clientSocket).removeWaiting(drinkID); // Remove tea from WAITING AREA
-              orders.get(clientSocket).setBrewing(drinkID, TEA); // Add tea to BREWING AREA
-              displayCafeState(); // Display Cafe Status in Server Terminal
+        if (!startedThread.get(clientSocket).contains(drinkID)) {
+          // Thread to Brew Tea
+          Thread brewTea = new Thread(() -> {
+            try {
+              teaSemaphore.acquire(); // At most 2 tea brew concurrently
+              synchronized (orders) { // Use lock to avoid race condition
+                orders.get(clientSocket).removeWaiting(drinkID); // Remove tea from WAITING AREA
+                orders.get(clientSocket).setBrewing(drinkID, TEA); // Add tea to BREWING AREA
+                displayCafeState(); // Display Cafe Status in Server Terminal
+              }
+              Thread.sleep(10000); // 30 seconds to fulfill a tea order
+              finishBrewing(clientSocket, drinkID, TEA); // Handle current tea order fulfilled
+            } catch (InterruptedException e) {
+              e.printStackTrace();
+            } finally {
+              teaSemaphore.release(); // Release semaphore to allow remaining threads to run
             }
-            Thread.sleep(5000); // 30 seconds to fulfill a tea order
-            finishBrewing(clientSocket, drinkID, TEA); // Handle current tea order fulfilled
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          } finally {
-            teaSemaphore.release(); // Release semaphore to allow remaining threads to run
-          }
-        });
-        brewTea.start(); // Start brew tea thread
+          });
+          startedThread.get(clientSocket).add(drinkID); // Append Drink ID to Started Thread List
+          brewTea.start(); // Start brew tea thread
+        }
       }
     }
 
@@ -80,7 +97,7 @@ public class CoffeeBar {
               orders.get(clientSocket).setBrewing(drinkID, COFFEE); // Add coffee to BREWING AREA
               displayCafeState(); // Display Cafe Status in Server Terminal
             }
-            Thread.sleep(10000); // 45 seconds to fulfill a coffee order
+            Thread.sleep(15000); // 45 seconds to fulfill a coffee order
             finishBrewing(clientSocket, drinkID, COFFEE); // Handle coffee fulfilled
           } catch (InterruptedException e) {
             e.printStackTrace();
