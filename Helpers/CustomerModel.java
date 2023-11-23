@@ -1,4 +1,5 @@
 package Helpers;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
@@ -10,6 +11,7 @@ public class CustomerModel implements AutoCloseable {
   private final Scanner scanner;
   private final PrintWriter writer;
   private final Socket socket;
+  private Thread pollingThread;
 
   // Handle New Customer Joins
   public CustomerModel(String customerName) throws Exception {
@@ -46,34 +48,40 @@ public class CustomerModel implements AutoCloseable {
         writer.println("IS_ORDER_FULFILLED"); // Send Command to Server
 
         // Notify customer and stop polling when all orders are fulfilled
-        if (scanner.nextLine().equals("complete")) {
-          String orderSplit[] = scanner.nextLine().split(" ");
-          int teaCount = Integer.parseInt(orderSplit[0]); // Number of tea
-          int coffeeCount = Integer.parseInt(orderSplit[1]); // Numer of coffee
+        try {
+          String response = scanner.nextLine();
 
-          // Display msg accordingly
-          String customerOrder = "", teaPlural = "", coffeePlural = "";
-          if (teaCount > 0) {
-            teaPlural = teaCount > 1 ? "teas" : "tea"; // Set plural of tea
-            if (coffeeCount > 0) {
-              coffeePlural = coffeeCount > 1 ? "coffees" : "coffee"; // Set plural of coffee
-              customerOrder = teaCount + " " + teaPlural + " and " + coffeeCount + " " + coffeePlural;
+          if (response.equals("complete")) {
+            String orderSplit[] = scanner.nextLine().split(" ");
+            int teaCount = Integer.parseInt(orderSplit[0]); // Number of tea
+            int coffeeCount = Integer.parseInt(orderSplit[1]); // Numer of coffee
+
+            // Display msg accordingly
+            String customerOrder = "", teaPlural = "", coffeePlural = "";
+            if (teaCount > 0) {
+              teaPlural = teaCount > 1 ? "teas" : "tea"; // Set plural of tea
+              if (coffeeCount > 0) {
+                coffeePlural = coffeeCount > 1 ? "coffees" : "coffee"; // Set plural of coffee
+                customerOrder = teaCount + " " + teaPlural + " and " + coffeeCount + " " + coffeePlural;
+              } else {
+                customerOrder = teaCount + " " + teaPlural;
+              }
             } else {
-              customerOrder = teaCount + " " + teaPlural;
+              coffeePlural = coffeeCount > 1 ? "coffees" : "coffee"; // Set plural of coffee
+              customerOrder = coffeeCount + " " + coffeePlural;
             }
-          } else {
-            coffeePlural = coffeeCount > 1 ? "coffees" : "coffee"; // Set plural of coffee
-            customerOrder = coffeeCount + " " + coffeePlural;
-          }
-          System.out.println("\n\n[ ! NOTIFICATION ! ]\nDear " +
-              customerName + ", your order is delivered (" + customerOrder + ")");
+            System.out.println("\n\n*** NOTIFICATION ***\nDear " +
+                customerName + ", your order is delivered (" + customerOrder + ")");
 
-          orderFulfilled = true; // Stop thread when order is fulfilled
+            pollingThread = null;
+            orderFulfilled = true; // Stop thread when order is fulfilled
+          }
+        } catch (Exception e) {
+          break;
         }
         try {
           Thread.sleep(15000); // Poll server every 15 sec
         } catch (InterruptedException e) {
-          e.printStackTrace();
         }
       }
     });
@@ -81,9 +89,17 @@ public class CustomerModel implements AutoCloseable {
     // Start thread after customer places an order
     if (isAddOn.equals("false")) {
       monitorOrder.start();
+      pollingThread = monitorOrder;
     }
 
     return (orderReply + "," + isAddOn); // Let client know if order is add on, display msg accordingly
+  }
+
+  // Method to Interrupt Polling Thread (stop immediately from Thread Sleep)
+  public void stopPolling () {
+    if (pollingThread != null){
+      pollingThread.interrupt();
+    }
   }
 
   // Handle Order Status

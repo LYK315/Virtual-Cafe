@@ -3,6 +3,7 @@ package Helpers;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class Orders {
   private final String TEA = "tea";
@@ -10,15 +11,16 @@ public class Orders {
   private final String WAIT = "waiting";
   private final String BREW = "brewing";
   private final String TRAY = "tray";
-
+  private String customerName = null;
   private int numOfTea = 0, numOfCoffee = 0, totalOrders = 0;
-  private Map<Integer, String> drinkWaiting = new HashMap<>();
-  private Map<Integer, String> drinkBrewing = new HashMap<>();
-  private Map<Integer, String> drinkInTray = new HashMap<>();
+  private TreeMap<Integer, String> drinkWaiting = new TreeMap<>(); // Format <drinkID, drinkType>
+  private TreeMap<Integer, String> drinkBrewing = new TreeMap<>(); // Format <drinkID, drinkType>
+  private TreeMap<Integer, String> drinkInTray = new TreeMap<>(); // Format <drinkID, drinkType>
 
-  public Orders(int numOfTea, int numOfCoffee) {
+  public Orders(int numOfTea, int numOfCoffee, String customerName) {
     this.numOfTea = numOfTea;
     this.numOfCoffee = numOfCoffee;
+    this.customerName = customerName;
     addTeaOrders();
     addCoffeeOrders();
   }
@@ -48,6 +50,10 @@ public class Orders {
     }
   }
 
+  public String getCustomerName () {
+    return customerName;
+  }
+
   // Methods to handle Waiting, Brewing, Tray Area
   public void setWaiting(Integer drinkID, String drinkType) {
     drinkWaiting.put(drinkID, drinkType);
@@ -67,6 +73,10 @@ public class Orders {
 
   public void removeBrewing(Integer drinkID) {
     drinkBrewing.remove(drinkID);
+  }
+
+  public void removeInTray(Integer drinkID) {
+    drinkInTray.remove(drinkID);
   }
 
   public void removeAllInTray() {
@@ -89,7 +99,7 @@ public class Orders {
 
   // Retrieve specific drink type (tea / coffee) based on Drink State
   public ArrayList<Integer> getDrinkState(String drinkType, String drinkState) {
-    Map<Integer, String> drinkStateType = new HashMap<>();
+    TreeMap<Integer, String> drinkStateType = new TreeMap<>();
     ArrayList<Integer> orderInState = new ArrayList<>();
 
     if (drinkState.equals(WAIT))

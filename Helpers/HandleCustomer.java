@@ -1,4 +1,5 @@
 package Helpers;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.Map;
@@ -191,7 +192,7 @@ public class HandleCustomer implements Runnable {
               }
 
               // Place order to Coffee Bar
-              String isAddOn = coffeeBar.placeOrder(clientSocket, numOfTea, numOfCoffee);
+              String isAddOn = coffeeBar.placeOrder(clientSocket, customerName, numOfTea, numOfCoffee);
 
               // Let cient know if order is add on
               writer.println(isAddOn);
@@ -217,16 +218,23 @@ public class HandleCustomer implements Runnable {
       if (lostConnection) {
         clientCount.remove(clientCount.get(clientSocket));
         System.out.println("[Lost Connection] " + customerName + "(" + clientSocket + ") disappeared.");
-        coffeeBar.removeClient(clientSocket); // Remove client from Coffee Bar
-        coffeeBar.displayCafeState(); // Display Cafe Status in Server Terminal
       }
       // If client left by using exit command
       else {
         clientCount.remove(clientCount.get(clientSocket));
         System.out.println(customerName + "(" + clientSocket + ") left the Cafe.");
+      }
+
+      // If Customer Left Cafe before Order is Delivered
+      if (clientCount.get(clientSocket).equals("waiting")) {
+        coffeeBar.removeClient(clientSocket); // Remove client from Coffee Bar
+        coffeeBar.displayCafeState(); // Display Cafe Status in Server Terminal
+        coffeeBar.transferOrder(clientSocket); // Transfer Drinks to Other Customers in the Cafe
+      } else {
         coffeeBar.removeClient(clientSocket); // Remove client from Coffee Bar
         coffeeBar.displayCafeState(); // Display Cafe Status in Server Terminal
       }
+
     }
   }
 

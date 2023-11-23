@@ -85,6 +85,7 @@ public class Customer {
 
             // User Exits The Cafe
             case "exit":
+              customer.stopPolling(); // Interrupt and stop polling immediately after customer exit
               properExit = true;
               customer.exitCafe();
               input.close();
