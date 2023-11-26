@@ -18,7 +18,7 @@ public class Customer {
       Runtime.getRuntime().addShutdownHook(new Thread(() -> {
         if (!properExit) {
           System.out.println("\nReceived termination signal (SIGTERM).\n");
-          System.out.println("Bye Bye Come Again, " + customerName + ".\n");
+          System.out.println("Leave from the front door next time, " + customerName + ".\n");
         }
       }));
 

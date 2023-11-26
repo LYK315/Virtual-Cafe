@@ -1,5 +1,4 @@
 package Helpers;
-
 import java.io.*;
 import java.net.Socket;
 import java.util.Map;
@@ -11,6 +10,7 @@ public class HandleCustomer implements Runnable {
   private CoffeeBar coffeeBar;
   private boolean lostConnection = true;
   private TreeMap<String, String> clientCount = new TreeMap<>();
+  private String serverMsg;
 
   public HandleCustomer(Socket socket, CoffeeBar coffeeBar, TreeMap<String, String> clientCount) {
     this.socket = socket;
@@ -32,8 +32,12 @@ public class HandleCustomer implements Runnable {
       try {
         // Read and output customer name
         customerName = scanner.nextLine();
-        System.out.println(customerName + "(" + clientSocket + ") entered the Cafe.");
-        coffeeBar.displayCafeState(); // Display Cafe Status in Server Terminal
+
+        // Display Cafe Status in Server Terminal
+        serverMsg = customerName + "(" + clientSocket + ") entered the Cafe.";
+        System.out.println(serverMsg);
+        coffeeBar.displayCafeState(serverMsg, false);
+        
 
         writer.println("SUCCESS"); // Response with success state to Client
 
@@ -217,25 +221,26 @@ public class HandleCustomer implements Runnable {
       // If client left by CTRL+C or Lost Connection
       if (lostConnection) {
         clientCount.remove(clientCount.get(clientSocket));
-        System.out.println("[Lost Connection] " + customerName + "(" + clientSocket + ") disappeared.");
+        serverMsg = "[Lost Connection] " + customerName + "(" + clientSocket + ") disappeared.";
+        System.out.println(serverMsg);
       }
       // If client left by using exit command
       else {
         clientCount.remove(clientCount.get(clientSocket));
-        System.out.println(customerName + "(" + clientSocket + ") left the Cafe.");
+        serverMsg = customerName + "(" + clientSocket + ") left the Cafe.";
+        System.out.println(serverMsg);
       }
 
       // If Customer Left Cafe before Order is Delivered
       if (clientCount.get(clientSocket).equals("waiting")) {
         coffeeBar.removeClient(clientSocket); // Remove client from Coffee Bar
-        coffeeBar.displayCafeState(); // Display Cafe Status in Server Terminal
+        coffeeBar.displayCafeState(serverMsg, true);// Display Cafe Status in Server Terminal
+        
         coffeeBar.transferOrder(clientSocket); // Transfer Drinks to Other Customers in the Cafe
       } else {
         coffeeBar.removeClient(clientSocket); // Remove client from Coffee Bar
-        coffeeBar.displayCafeState(); // Display Cafe Status in Server Terminal
+        coffeeBar.displayCafeState(serverMsg, true); // Display Cafe Status in Server Terminal
       }
-
     }
   }
-
 }

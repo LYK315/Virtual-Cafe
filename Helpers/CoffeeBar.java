@@ -1,10 +1,17 @@
 package Helpers;
 
+import java.io.*;
+import java.lang.reflect.Type;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Semaphore;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class CoffeeBar {
   private final String TEA = "tea";
@@ -19,7 +26,8 @@ public class CoffeeBar {
   private Map<String, ArrayList<Integer>> drinkInQueue = new HashMap<>(); // "Brewing Queue"
   private Map<String, Orders> orders = new TreeMap<>(); // All Orders in Cafe Stored Here
   private boolean shouldPause = false; // Pause Main Brewing Thread if True
-  private Integer pauseDuration = 0;
+  private Integer pauseDuration = 0; // Duration to Pause Main Brewing Threads
+  private final ServerLog serverLog = new ServerLog(); // Class to store server log to write to JSON
 
   // Constrcutor to store clients list
   public CoffeeBar(TreeMap<String, String> clientCount) {
@@ -41,9 +49,9 @@ public class CoffeeBar {
         orders.put(clientSocket, order); // Append customer's order to the "Order Queue" in Cafe
         clientCount.put(clientSocket, WAIT); // Update Customer Status to WAITING ORDER
       }
-      displayCafeState(); // Display Cafe Status in Server Terminal
-      startBrewing(clientSocket); // Start Processing Customer's Order
     }
+    displayCafeState("Order Placed", true); // Display Cafe Status in Server Terminal
+    startBrewing(clientSocket); // Start Processing Customer's Order
 
     return isAddOn; // Let client know customer is adding on new orders (display different msg)
   }
@@ -81,12 +89,12 @@ public class CoffeeBar {
                 synchronized (orders) { // Use lock to avoid race condition
                   orders.get(clientSocket).removeWaiting(drinkID); // Remove tea from WAITING AREA
                   orders.get(clientSocket).setBrewing(drinkID, TEA); // Add tea to BREWING AREA
-                  displayCafeState(); // Display Cafe Status in Server Terminal
+                  displayCafeState("Update Brewing Area", true); // Display Cafe Status in Server Terminal
                 }
                 synchronized (drinkInQueue) {
                   drinkInQueue.get(clientSocket).remove(drinkID); // Remove Tea from "Brewing Queue"
                 }
-                Thread.sleep(10000); // 30 seconds to Fulfill a Tea Order
+                Thread.sleep(30000); // 30 seconds to Fulfill a Tea Order
                 finishBrewing(clientSocket, drinkID, TEA); // Handle Tea Order fulfilled
               }
             } catch (InterruptedException e) {
@@ -127,12 +135,12 @@ public class CoffeeBar {
                 synchronized (orders) { // Use lock to avoid race condition
                   orders.get(clientSocket).removeWaiting(drinkID); // Remove from coffee from WAITING AREA
                   orders.get(clientSocket).setBrewing(drinkID, COFFEE); // Add coffee to BREWING AREA
-                  displayCafeState(); // Display Cafe Status in Server Terminal
+                  displayCafeState("Update Brewing Area", true); // Display Cafe Status in Server Terminal
                 }
                 synchronized (drinkInQueue) {
                   drinkInQueue.get(clientSocket).remove(drinkID); // Remove Coffee from "Brewing Queue"
                 }
-                Thread.sleep(15000); // 45 Seconds to Fulfill a Coffee Order
+                Thread.sleep(45000); // 45 Seconds to Fulfill a Coffee Order
                 finishBrewing(clientSocket, drinkID, COFFEE); // Handle Coffee Order Fulfilled
               }
             } catch (InterruptedException e) {
@@ -155,8 +163,8 @@ public class CoffeeBar {
     synchronized (orders) {
       orders.get(clientSocket).removeBrewing(drinkID); // Remove drink from BREWING AREA
       orders.get(clientSocket).setInTray(drinkID, drinkType); // Add drink to TRAY
-      displayCafeState(); // Display Cafe Status in Server Terminal
     }
+    displayCafeState("Update Tray Area", true); // Display Cafe Status in Server Terminal
   }
 
   // All Orders Fulfilled (REMOVE ALL DRINKS IN TRAY)
@@ -166,8 +174,8 @@ public class CoffeeBar {
       orders.get(clientSocket).removeAllInTray(); // Remove all drinks in TRAY AREA
       orders.remove(clientSocket); // Remove client from "Order Queue"
       drinkInQueue.remove(clientSocket); // Remove client from "Barista noted the order"
-      displayCafeState(); // Display Cafe Status in Server Terminal
     }
+    displayCafeState("Order Delivered", true); // Display Cafe Status in Server Terminal
   }
 
   // Retrieve Order Status
@@ -221,29 +229,100 @@ public class CoffeeBar {
   }
 
   // Display Cafe Status
-  public void displayCafeState() {
-    System.out.println("\nClients in Cafe: " + clientCount.size());
-    System.out.println("Clients Waiting: " + customerWaiting());
+  public synchronized void displayCafeState(String serverMsg, boolean displayTerminal) {
+    Integer clientInCafe, clientWaitingOrder;
+    Integer teaWaiting, teaBrewing, teaInTray;
+    Integer coffeeWaiting, coffeeBrewing, coffeeInTray;
 
-    System.out.println("Orders Waiting : " + "Tea(" + getAllStatus(TEA, WAIT) + ") & Coffee("
-        + getAllStatus(COFFEE, WAIT) + ")");
+    clientInCafe = clientCount.size();
+    clientWaitingOrder = customerWaiting();
+    teaWaiting = getAllStatus(TEA, WAIT);
+    teaBrewing = getAllStatus(TEA, BREW);
+    teaInTray = getAllStatus(TEA, TRAY);
+    coffeeWaiting = getAllStatus(COFFEE, WAIT);
+    coffeeBrewing = getAllStatus(COFFEE, BREW);
+    coffeeInTray = getAllStatus(COFFEE, TRAY);
 
-    System.out.println("Orders Brewing : " + "Tea(" + getAllStatus(TEA, BREW) + ") & Coffee("
-        + getAllStatus(COFFEE, BREW) + ")");
+    // Display in Server Terminal Screen
+    if (displayTerminal) {
+      System.out.println("\nClients in Cafe: " + clientInCafe);
+      System.out.println("Clients Waiting: " + clientWaitingOrder);
+      System.out.println("Orders Waiting : " + "Tea(" + teaWaiting + ") & Coffee(" + coffeeWaiting + ")");
+      System.out.println("Orders Brewing : " + "Tea(" + teaBrewing + ") & Coffee(" + coffeeBrewing + ")");
+      System.out.println("Orders in Tray : " + "Tea(" + teaInTray + ") & Coffee(" + coffeeInTray + ")\n");
+    }
 
-    System.out.println("Orders in Tray : " + "Tea(" + getAllStatus(TEA, TRAY) + ") & Coffee("
-        + getAllStatus(COFFEE, TRAY) + ")\n");
+    // Update Cafe State to Server Log
+    serverLog.setClientInCafe(clientInCafe);
+    serverLog.setClientWaitingOrder(clientWaitingOrder);
+    serverLog.setOrdersWaiting("Tea(" + teaWaiting + ") and Coffee(" + coffeeWaiting + ")");
+    serverLog.setOrdersBrewing("Tea(" + teaBrewing + ") and Coffee(" + coffeeBrewing + ")");
+    serverLog.setOrdersInTray("Tea(" + teaInTray + ") and Coffee(" + coffeeInTray + ")");
+    serverLog.setServerMsg(serverMsg);
+
+    // Update Server Log to JSON File
+    try {
+      jsonWriter(serverMsg);
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+  }
+
+  // Write Server Log to JSON
+  public synchronized void jsonWriter(String serverMsg) throws FileNotFoundException, IOException {
+    TreeMap<String, ServerLog> currentLog = new TreeMap<>();
+    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+    if (new File("serverLog.json").exists()) {
+      String previousLog = readPreviousLog();
+      Type mapType = currentLog.getClass();
+      TreeMap<String, ServerLog> previousData = gson.fromJson(previousLog, mapType);
+      currentLog = previousData;
+    }
+
+    // Get Current System Date & Time
+    ZonedDateTime currentTimestampWithZone = ZonedDateTime.now();
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    String currentDateTime = currentTimestampWithZone.format(formatter);
+
+    currentLog.put(currentDateTime, serverLog);
+
+    try (FileWriter writer = new FileWriter("serverLog.json")) {
+      gson.toJson(currentLog, writer);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  // Read Server Log Info
+  private String readPreviousLog() throws FileNotFoundException, IOException {
+    try (BufferedReader reader = new BufferedReader(new FileReader("serverLog.json"))) {
+      StringBuilder content = new StringBuilder();
+      String line;
+      while ((line = reader.readLine()) != null) {
+        content.append(line);
+      }
+      return content.toString();
+    }
   }
 
   // Transfer Customer Order
   public void transferOrder(String fromClient) {
 
+    // Use an Independent Thread to Transfer Order
     Thread waitAndTransfer = new Thread(() -> {
+      String serverMsg;
+
       // Order detail of (frmClient)
       Orders fromCustomer = orders.get(fromClient);
       String fromCustomerName = orders.get(fromClient).getCustomerName();
 
-      System.out.println("Checking if " + fromCustomerName + "'s orders can be transferred..");
+      serverMsg = "Checking if " + fromCustomerName + "'s orders can be transferred..";
+      System.out.println(serverMsg);
+      displayCafeState(serverMsg, false);
 
       // Remove Orders in (frmClient) WAITING AREA
       if (fromCustomer.getDrinkState(TEA, WAIT).size() + fromCustomer.getDrinkState(COFFEE, WAIT).size() > 0) {
@@ -259,25 +338,31 @@ public class CoffeeBar {
             drinkInQueue.get(fromClient).remove(drinkID); // Remove remaining coffee in 'Queue to Brew'
           }
         }
-        System.out.println("Removed " + fromCustomerName + "'s orders in waiting area");
+
+        serverMsg = "Removed " + fromCustomerName + "'s orders in waiting area";
+        System.out.println(serverMsg);
+        displayCafeState(serverMsg, false);
       }
 
       // Wait for (frmClient) Orders in BREWING AREA to complete
       if (fromCustomer.getDrinkState(TEA, BREW).size() + fromCustomer.getDrinkState(COFFEE, BREW).size() > 0) {
-        System.out.println("Finishing " + fromCustomerName + "'s orders in brewing area");
+        serverMsg = "Finishing " + fromCustomerName + "'s orders in brewing area";
+        System.out.println(serverMsg);
+        displayCafeState(serverMsg, false);
+
         if (fromCustomer.getDrinkState(COFFEE, BREW).size() > 0) { // Got Coffee in BREWING AREA
-          pauseDuration = 16000; // Duration to Pause
+          pauseDuration = 45500; // Duration to Pause
           shouldPause = true; // Pause the main Coffee Brewing Process
           try {
-            Thread.sleep(15000); // Wait for (frmClient) Coffee to complete
+            Thread.sleep(45000); // Wait for (frmClient) Coffee to complete
           } catch (InterruptedException e) {
             e.printStackTrace();
           }
         } else if (fromCustomer.getDrinkState(TEA, BREW).size() > 0) { // Only Got Tea in BREWING AREA
-          pauseDuration = 11000; // Duration to Pause
+          pauseDuration = 30500; // Duration to Pause
           shouldPause = true; // Pause the main Tea Brewing Process
           try {
-            Thread.sleep(10000); // Wait for (frmClient) Tea to complete
+            Thread.sleep(30000); // Wait for (frmClient) Tea to complete
           } catch (InterruptedException e) {
             e.printStackTrace();
           }
@@ -300,7 +385,7 @@ public class CoffeeBar {
           int toCoffeeWaiting = toCustomer.getDrinkState(COFFEE, WAIT).size();
 
           // Transfer Tea
-          if (toTeaWaiting > 0) {
+          if (fromTeaTray.size() > 0 && toTeaWaiting > 0) {
             // (toClient) Tea is More than / Same to (frmClient) Tea in WAITING AREA
             if (toTeaWaiting > fromTeaTray.size() || toTeaWaiting == fromTeaTray.size()) {
               // Remove (frmClient) Tea in TRAY AREA
@@ -347,11 +432,13 @@ public class CoffeeBar {
                 }
               }
             }
-            System.out.println("\nTea transferred from " + fromCustomerName + " to " + toCustomerName);
+            serverMsg = "Tea transferred from " + fromCustomerName + " to " + toCustomerName;
+            System.out.println(serverMsg);
+            displayCafeState(serverMsg, false);
           }
 
           // Transfer Coffee
-          if (toCoffeeWaiting > 0) {
+          if (fromCoffeeTray.size() > 0 && toCoffeeWaiting > 0) {
             // (toClient) Coffee is More than / Same to (frmClient) Coffee in WAITING AREA
             if (toCoffeeWaiting > fromCoffeeTray.size() || toCoffeeWaiting == fromCoffeeTray.size()) {
               // Remove (frmClient) Coffee in TRAY AREA
@@ -392,15 +479,27 @@ public class CoffeeBar {
                 }
               }
             }
-            System.out.println("\nCoffee transferred from " + fromCustomerName + " to " + toCustomerName);
+            serverMsg = "Coffee transferred from " + fromCustomerName + " to " + toCustomerName;
+            System.out.println(serverMsg);
+            displayCafeState(serverMsg, false);
           }
         }
       }
-      displayCafeState();
+
+      // Display msg if (frmClient) orders is not transferred to any other customer
+      if (fromTeaTray.size() + fromCoffeeTray.size() == fromCustomer.getDrinkState(TEA, TRAY).size()
+          + fromCustomer.getDrinkState(COFFEE, TRAY).size()) {
+
+        serverMsg = fromCustomerName + " remaining orders is not transferred to other customer";
+        System.out.println(serverMsg);
+        displayCafeState(serverMsg, false);
+      }
+
+      displayCafeState("Order Transfer Complete", true);
       shouldPause = false; // Continue Other Brew Process
     });
 
-    waitAndTransfer.start();
+    waitAndTransfer.start(); // Start the thread
   }
 
   // Remove Client if Disconnected
