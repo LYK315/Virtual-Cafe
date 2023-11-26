@@ -1,4 +1,5 @@
 package Helpers;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.Map;
@@ -37,7 +38,6 @@ public class HandleCustomer implements Runnable {
         serverMsg = customerName + "(" + clientSocket + ") entered the Cafe.";
         System.out.println(serverMsg);
         coffeeBar.displayCafeState(serverMsg, false);
-        
 
         writer.println("SUCCESS"); // Response with success state to Client
 
@@ -235,7 +235,6 @@ public class HandleCustomer implements Runnable {
       if (clientCount.get(clientSocket).equals("waiting")) {
         coffeeBar.removeClient(clientSocket); // Remove client from Coffee Bar
         coffeeBar.displayCafeState(serverMsg, true);// Display Cafe Status in Server Terminal
-        
         coffeeBar.transferOrder(clientSocket); // Transfer Drinks to Other Customers in the Cafe
       } else {
         coffeeBar.removeClient(clientSocket); // Remove client from Coffee Bar

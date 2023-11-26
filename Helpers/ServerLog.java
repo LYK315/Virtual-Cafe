@@ -1,13 +1,5 @@
 package Helpers;
 
-// import java.io.BufferedReader;
-// import java.io.FileNotFoundException;
-// import java.io.FileReader;
-// import java.io.FileWriter;
-// import java.io.IOException;
-// import com.google.gson.Gson;
-// import com.google.gson.GsonBuilder;
-
 public class ServerLog {
   private int clientInCafe, clientWaitingOrder;
   private String ordersWaiting, ordersBrewing, ordersInTray;
