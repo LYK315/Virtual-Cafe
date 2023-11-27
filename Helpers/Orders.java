@@ -3,7 +3,6 @@ package Helpers;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 public class Orders {
   private final String TEA = "tea";
@@ -13,9 +12,9 @@ public class Orders {
   private final String TRAY = "tray";
   private String customerName = null;
   private int numOfTea = 0, numOfCoffee = 0, totalOrders = 0;
-  private TreeMap<Integer, String> drinkWaiting = new TreeMap<>(); // Format <drinkID, drinkType>
-  private TreeMap<Integer, String> drinkBrewing = new TreeMap<>(); // Format <drinkID, drinkType>
-  private TreeMap<Integer, String> drinkInTray = new TreeMap<>(); // Format <drinkID, drinkType>
+  private Map<Integer, String> drinkWaiting = new HashMap<>(); // Format <drinkID, drinkType>
+  private Map<Integer, String> drinkBrewing = new HashMap<>(); // Format <drinkID, drinkType>
+  private Map<Integer, String> drinkInTray = new HashMap<>(); // Format <drinkID, drinkType>
 
   public Orders(int numOfTea, int numOfCoffee, String customerName) {
     this.numOfTea = numOfTea;
@@ -99,7 +98,7 @@ public class Orders {
 
   // Retrieve specific drink type (tea / coffee) based on Drink State
   public ArrayList<Integer> getDrinkState(String drinkType, String drinkState) {
-    TreeMap<Integer, String> drinkStateType = new TreeMap<>();
+    Map<Integer, String> drinkStateType = new HashMap<>();
     ArrayList<Integer> orderInState = new ArrayList<>();
 
     if (drinkState.equals(WAIT))

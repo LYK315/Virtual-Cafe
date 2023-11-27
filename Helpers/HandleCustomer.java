@@ -37,7 +37,7 @@ public class HandleCustomer implements Runnable {
         // Display Cafe Status in Server Terminal
         serverMsg = customerName + "(" + clientSocket + ") entered the Cafe.";
         System.out.println(serverMsg);
-        coffeeBar.displayCafeState(serverMsg, false);
+        coffeeBar.displayCafeState(serverMsg, true);
 
         writer.println("SUCCESS"); // Response with success state to Client
 
