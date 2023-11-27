@@ -24,31 +24,31 @@ public class HandleCustomer implements Runnable {
     String customerName = null;
     final String clientSocket = clientCount.lastKey();
 
-    // Try to set up connection with client via socket
+    // Set up connection with client via socket
     try {
       Scanner scanner = new Scanner(socket.getInputStream());
       PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
 
-      // Try to read customr name (sent from client)
       try {
         // Read and output customer name
         customerName = scanner.nextLine();
+        serverMsg = customerName + "(" + clientSocket + ") entered the Cafe.";
 
         // Display Cafe Status in Server Terminal
-        serverMsg = customerName + "(" + clientSocket + ") entered the Cafe.";
         System.out.println(serverMsg);
         coffeeBar.displayCafeState(serverMsg, true);
 
-        writer.println("SUCCESS"); // Response with success state to Client
+        // Response with success state to Client
+        writer.println("SUCCESS");
 
         // Handle Orders / Requests from Customer
         while (true) {
-          // Read requests from client
+          // Read and parse requests from client
           String request = scanner.nextLine().toLowerCase();
           String[] substring = request.split(" ");
 
           switch (substring[0]) {
-            case "is_order_fulfilled":
+            case "is_order_fulfilled": // Handle poll server
               int teaInTray = 0, coffeeInTray = 0, totalOrders = 0;
 
               // Retrive all drink status
@@ -61,14 +61,16 @@ public class HandleCustomer implements Runnable {
                       orderState.get("tea_tray").intValue() + orderState.get("coffee_waiting").intValue() +
                       orderState.get("coffee_brewing").intValue() + orderState.get("coffee_tray").intValue();
 
-                  teaInTray = orderState.get("tea_tray").intValue(); // Tea Count in Tray
-                  coffeeInTray = orderState.get("coffee_tray").intValue(); // Coffee Count in Tray
+                  // Tea Count in Tray
+                  teaInTray = orderState.get("tea_tray").intValue();
+                  // Coffee Count in Tray
+                  coffeeInTray = orderState.get("coffee_tray").intValue();
 
                   // Check if all drinks are already in the TRAY AREA
                   if (teaInTray + coffeeInTray == totalOrders) {
                     // If Customer is Still in the Cafe
                     if (clientCount.containsKey(clientSocket)) {
-                      writer.println("complete"); // Update client order is complete
+                      writer.println("complete"); // Notify client order is complete
                       writer.println(teaInTray + " " + coffeeInTray); // Tell client what order is fulfilled
                       coffeeBar.ordersFulfilled(clientSocket); // Delete all drinks in TRAY AREA
                     }
@@ -81,10 +83,11 @@ public class HandleCustomer implements Runnable {
               }
               break;
 
-            case "order_status":
+            case "order_status": // Handle print Order Status
               int numOfArea = 0;
               int teaWaiting = 0, teaBrewing = 0, teaTray = 0;
               int coffeeWaiting = 0, coffeeBrewing = 0, coffeeTray = 0;
+
               // Retrive all drink status
               Map<String, Integer> orderStatus = coffeeBar.getOrderStatus(clientSocket);
 
@@ -163,9 +166,9 @@ public class HandleCustomer implements Runnable {
 
               break;
 
-            case "order_drinks":
-              // order_drinks order 1 tea - 4 words
-              // order_drinks order 1 tea and 1 coffee - 7 words
+            case "order_drinks": // Handle Order Drinks
+              // FORMAT: order_drinks order 1 tea - 4 words
+              // FORMAT: order_drinks order 1 tea and 1 coffee - 7 words
               int numOfTea = 0, numOfCoffee = 0;
 
               // Customer orders either tea or coffee
@@ -198,14 +201,14 @@ public class HandleCustomer implements Runnable {
               // Place order to Coffee Bar
               String isAddOn = coffeeBar.placeOrder(clientSocket, customerName, numOfTea, numOfCoffee);
 
-              // Let cient know if order is add on
+              // Let client know if order is add on
               writer.println(isAddOn);
-
               break;
 
-            case "exit":
-              socket.close();
+            case "exit": // Handle client exit Cafe
+              // lostConnection true means client didnt use exit command to leave
               lostConnection = false;
+              socket.close(); // Close Socket
               break;
 
             default:
@@ -220,24 +223,30 @@ public class HandleCustomer implements Runnable {
     } finally {
       // If client left by CTRL+C or Lost Connection
       if (lostConnection) {
+        // Remove client from cafe
         clientCount.remove(clientCount.get(clientSocket));
+
+        // Display Cafe Status in Server Terminal
         serverMsg = "[Lost Connection] " + customerName + "(" + clientSocket + ") disappeared.";
         System.out.println(serverMsg);
       }
       // If client left by using exit command
       else {
+        // Remove client from Cafe
         clientCount.remove(clientCount.get(clientSocket));
+
+        // Display Cafe Status in Server Terminal
         serverMsg = customerName + "(" + clientSocket + ") left the Cafe.";
         System.out.println(serverMsg);
       }
 
       // If Customer Left Cafe before Order is Delivered
       if (clientCount.get(clientSocket).equals("waiting")) {
-        coffeeBar.removeClient(clientSocket); // Remove client from Coffee Bar
+        coffeeBar.removeClient(clientSocket); // Remove client from Cafe
         coffeeBar.displayCafeState(serverMsg, true);// Display Cafe Status in Server Terminal
         coffeeBar.transferOrder(clientSocket); // Transfer Drinks to Other Customers in the Cafe
       } else {
-        coffeeBar.removeClient(clientSocket); // Remove client from Coffee Bar
+        coffeeBar.removeClient(clientSocket); // Remove client from Cafe
         coffeeBar.displayCafeState(serverMsg, true); // Display Cafe Status in Server Terminal
       }
     }

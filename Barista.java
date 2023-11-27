@@ -12,15 +12,13 @@ import Helpers.ServerLog;
 
 public class Barista {
   private final static int port = 8888;
+  private final static String IDLE = "idle";
   private static TreeMap<String, String> clientCount = new TreeMap<>(); // Format <portNumber, State>
   private static TreeMap<String, ServerLog> currentLog = new TreeMap<>(); // Store Server Log
-  // private final static CoffeeBar coffeeBar = new CoffeeBar(clientCount,
-  // currentLog);
-  private final static String IDLE = "idle";
 
   // Main method to run the program, a.k.a 'server', a.k.a 'barista'
   public static void main(String[] args) {
-    // Check if "serverLog" file already exist
+    // Check if "serverLog.json" file already exist
     if (new File("serverLog.json").exists()) {
       Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
@@ -61,13 +59,10 @@ public class Barista {
     }));
 
     try {
-      // Instantiate server socket that will constantly listen to connections
+      // Instantiate Server Socket
       serverSocket = new ServerSocket(port);
       System.out.println("Waiting for Customers...");
 
-      // Server & Client are both seperated processes.
-      // If multiple client connects to server, 'Server Process' will have multiple
-      // threads to handle different clients.
       while (true) {
         // Socket stays in blocked state untill a customer is connected
         Socket socket = serverSocket.accept();

@@ -9,12 +9,12 @@ public class Customer {
 
     System.out.print("Hello, how should I address you: ");
 
-    // Try to get user input
     try {
+      // Get User Input
       Scanner input = new Scanner(System.in);
       String customerName = input.nextLine();
 
-      // To Intercept and Handle SIGINT (CTRL + C) Signal
+      // Intercept and Handle SIGINT (CTRL + C) Signal
       Runtime.getRuntime().addShutdownHook(new Thread(() -> {
         if (!properExit) {
           System.out.println("\nReceived termination signal (SIGTERM).\n");
@@ -22,11 +22,11 @@ public class Customer {
         }
       }));
 
-      // Try to set up connection with Server
+      // Set Up Connection with Server
       try (CustomerModel customer = new CustomerModel(customerName)) {
         System.out.println("\nWelcome to the Cafe, " + customerName + ".");
 
-        // Receive input from user as Order, send Request to Barista
+        // Receive input from user as Order, send Request to Server
         while (!choice.equals("exit")) {
           // Prompt user on how to interact with the server
           System.out.println("\nCommand Formats to Interact with Barista:\n" +

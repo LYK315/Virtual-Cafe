@@ -19,10 +19,9 @@ public class CoffeeBar {
   private final Semaphore teaSemaphore = new Semaphore(2); // At Most 2 Tea Threads Run Concurrently
   private final Semaphore coffeeSemaphore = new Semaphore(2); // At Most 2 Coffee Threads Run Concurrently
   private TreeMap<String, String> clientCount = new TreeMap<>(); // All Customer in the Cafe <clientSocket, State>
-  private HashMap<String, ArrayList<Integer>> drinkInQueue = new HashMap<>(); // "Brewing Queue" <clientSocket,
-                                                                              // drinkIDList>
   private TreeMap<String, Orders> orders = new TreeMap<>(); // All Orders in Cafe <clientSocket, Orders>
-  private TreeMap<String, ServerLog> currentLog = new TreeMap<>(); // Store Server Log
+  private TreeMap<String, ServerLog> currentLog = new TreeMap<>(); // Store Server Log <timestamp, ServerLog>
+  private HashMap<String, ArrayList<Integer>> drinkInQueue = new HashMap<>(); // <clientSocket,drinkIDList>
   private boolean shouldPause = false; // Pause Main Brewing Thread if True
   private Integer pauseDuration = 0; // Duration to Pause Main Brewing Threads
 
@@ -50,7 +49,7 @@ public class CoffeeBar {
       startBrewing(clientSocket); // Start Processing Customer Order
     }
 
-    return isAddOn; // Let client know customer is "add-on" (display different msg)
+    return isAddOn; // Let client know customer is "add-on"
   }
 
   // Start Brewing Orders (WAITING > BREWING)
@@ -73,7 +72,7 @@ public class CoffeeBar {
             try {
               teaSemaphore.acquire(); // At Most 2 Tea Brew Concurrently
 
-              // Pause if Server is Transferring Orders avoid Race Condition
+              // Pause if Transferring Orders, to avoid Race Condition or concurrency error
               if (shouldPause) {
                 try {
                   Thread.sleep(pauseDuration);
@@ -84,7 +83,7 @@ public class CoffeeBar {
               // Brew Tea only if Tea is in "Brewing Queue"
               if (drinkInQueue.containsKey(clientSocket)) {
                 if (drinkInQueue.get(clientSocket).contains(drinkID)) {
-                  synchronized (orders) { // Use Lock to avoid Race Condition
+                  synchronized (orders) { // Use synchronize to avoid Race Condition
                     orders.get(clientSocket).removeWaiting(drinkID); // Remove Tea from WAITING AREA
                     orders.get(clientSocket).setBrewing(drinkID, TEA); // Add Tea to BREWING AREA
                     displayCafeState("Update Brewing Area", true); // Print Cafe Status & Log
@@ -132,7 +131,7 @@ public class CoffeeBar {
               // Brew Coffee only if Coffee is in "Brewing Queue"
               if (drinkInQueue.containsKey(clientSocket)) {
                 if (drinkInQueue.get(clientSocket).contains(drinkID)) {
-                  synchronized (orders) { // Use lock to avoid Race Condition
+                  synchronized (orders) {
                     orders.get(clientSocket).removeWaiting(drinkID); // Remove from Coffee from WAITING AREA
                     orders.get(clientSocket).setBrewing(drinkID, COFFEE); // Add Coffee to BREWING AREA
                     displayCafeState("Update Brewing Area", true); // Print Cafe Status & Log
@@ -247,7 +246,7 @@ public class CoffeeBar {
     coffeeBrewing = getAllStatus(COFFEE, BREW);
     coffeeInTray = getAllStatus(COFFEE, TRAY);
 
-    // Display in Server Terminal Screen
+    // Display in Server Terminal Screen if displayTerminal = true
     if (displayTerminal) {
       System.out.println("\nClients in Cafe: " + clientInCafe);
       System.out.println("Clients Waiting: " + clientWaitingOrder);
@@ -282,7 +281,6 @@ public class CoffeeBar {
 
   // Transfer Customer Order
   public void transferOrder(String fromClient) {
-
     // Use an Independent Thread to Transfer Order
     Thread waitAndTransfer = new Thread(() -> {
       String serverMsg;
@@ -296,7 +294,7 @@ public class CoffeeBar {
       System.out.println(serverMsg);
       displayCafeState(serverMsg, false);
 
-      // Remove Orders in (frmClient) WAITING AREA
+      // Remove All Orders in (frmClient) WAITING AREA
       Integer frmTeaWaiting, frmCoffeeWaiting;
       frmTeaWaiting = fromCustomer.getDrinkState(TEA, WAIT).size();
       frmCoffeeWaiting = fromCustomer.getDrinkState(COFFEE, WAIT).size();
@@ -324,7 +322,7 @@ public class CoffeeBar {
         displayCafeState(serverMsg, false);
       }
 
-      // Wait for (frmClient) Orders in BREWING AREA to complete
+      // Wait for (frmClient) Orders in BREWING AREA to Complete
       if (fromCustomer.getDrinkState(TEA, BREW).size() + fromCustomer.getDrinkState(COFFEE, BREW).size() > 0) {
         serverMsg = "Finishing " + fromCustomerName + " orders in brewing area..";
         System.out.println(serverMsg);
@@ -489,11 +487,11 @@ public class CoffeeBar {
 
       shouldPause = false; // Continue Other Brew Process
     });
-    
+
     waitAndTransfer.start(); // Start the thread
   }
 
-  // Remove Client if Disconnected
+  // Remove Client from Cafe
   public void removeClient(String clientSocket) {
     clientCount.remove(clientSocket);
   }
