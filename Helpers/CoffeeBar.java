@@ -45,7 +45,12 @@ public class CoffeeBar {
         orders.put(clientSocket, order); // Append customer order to the "Order Queue" in Cafe
         clientCount.put(clientSocket, WAIT); // Update Customer Status to WAITING ORDER
       }
-      displayCafeState("Order Placed", true); // Print Cafe Status & Log
+
+      // Print Cafe Status & Write Log
+      String serverMsg = "Order received for " + customerName + " Tea(" + numOfTea + ") Coffee(" + numOfCoffee + ").";
+      System.out.println(serverMsg);
+      displayCafeState(serverMsg, true);
+
       startBrewing(clientSocket); // Start Processing Customer Order
     }
 
@@ -86,7 +91,7 @@ public class CoffeeBar {
                   synchronized (orders) { // Use synchronize to avoid Race Condition
                     orders.get(clientSocket).removeWaiting(drinkID); // Remove Tea from WAITING AREA
                     orders.get(clientSocket).setBrewing(drinkID, TEA); // Add Tea to BREWING AREA
-                    displayCafeState("Update Brewing Area", true); // Print Cafe Status & Log
+                    displayCafeState("Update Brewing Area", true); // Print Cafe Status & Write Log
                   }
                   synchronized (drinkInQueue) {
                     drinkInQueue.get(clientSocket).remove(drinkID); // Remove Tea from "Brewing Queue"
@@ -134,7 +139,7 @@ public class CoffeeBar {
                   synchronized (orders) {
                     orders.get(clientSocket).removeWaiting(drinkID); // Remove from Coffee from WAITING AREA
                     orders.get(clientSocket).setBrewing(drinkID, COFFEE); // Add Coffee to BREWING AREA
-                    displayCafeState("Update Brewing Area", true); // Print Cafe Status & Log
+                    displayCafeState("Update Brewing Area", true); // Print Cafe Status & Write Log
                   }
                   synchronized (drinkInQueue) {
                     drinkInQueue.get(clientSocket).remove(drinkID); // Remove Coffee from "Brewing Queue"
@@ -164,18 +169,25 @@ public class CoffeeBar {
     synchronized (orders) {
       orders.get(clientSocket).removeBrewing(drinkID); // Remove drink from BREWING AREA
       orders.get(clientSocket).setInTray(drinkID, drinkType); // Add drink to TRAY
-      displayCafeState("Update Tray Area", true); // Print Cafe Status & Log
+      displayCafeState("Update Tray Area", true); // Print Cafe Status & Write Log
     }
   }
 
   // All Orders Fulfilled (REMOVE ALL DRINKS IN TRAY)
   public void ordersFulfilled(String clientSocket) {
+    String customerName = orders.get(clientSocket).getCustomerName();
+    int teaInTray = orders.get(clientSocket).getDrinkState(TEA, TRAY).size();
+    int coffeeInTray = orders.get(clientSocket).getDrinkState(COFFEE, TRAY).size();
     synchronized (orders) {
       clientCount.put(clientSocket, IDLE); // Update Customer status to IDLE
       orders.get(clientSocket).removeAllInTray(); // Remove all drinks in TRAY AREA
       orders.remove(clientSocket); // Remove client from "Order Queue"
       drinkInQueue.remove(clientSocket); // Remove client from "Brewing Queue"
-      displayCafeState("Order Delivered", true); // Print Cafe Status & Log
+
+      // Print Cafe Status & Write Log
+      String serverMsg = "Order delivered to " + customerName + " Tea(" + teaInTray + ") Coffee(" + coffeeInTray + ").";
+      System.out.println(serverMsg);// Print Cafe Status & Write Log
+      displayCafeState(serverMsg, true);
     }
   }
 
@@ -230,7 +242,7 @@ public class CoffeeBar {
     return drinkCount;
   }
 
-  // Print Cafe Status & Log
+  // Print Cafe Status & Write Log
   public void displayCafeState(String serverMsg, boolean displayTerminal) {
     Integer clientInCafe, clientWaitingOrder;
     Integer teaWaiting, teaBrewing, teaInTray;
@@ -266,17 +278,11 @@ public class CoffeeBar {
 
     // Get Current System Date & Time
     ZonedDateTime currentTimestampWithZone = ZonedDateTime.now();
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnn");
     String currentDateTime = currentTimestampWithZone.format(formatter);
 
     // Append Server Log
     currentLog.put(currentDateTime, serverLog);
-
-    try {
-      Thread.sleep(700);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
   }
 
   // Transfer Customer Order
@@ -492,6 +498,7 @@ public class CoffeeBar {
       remainFrmTeaTray = fromCustomer.getDrinkState(TEA, TRAY).size();
       remainFrmCoffeeTray = fromCustomer.getDrinkState(COFFEE, TRAY).size();
 
+      // Set serverMessage
       if (remainFrmTeaTray > 0) {
         if (remainFrmCoffeeTray > 0) {
           removedSomething = true;
@@ -506,6 +513,7 @@ public class CoffeeBar {
         serverMsg = "(" + remainFrmCoffeeTray + ")Coffee removed from " + fromCustomerName + " Tray";
       }
 
+      // If nothing is removed (frmClient) Tray, set serverMessage
       if (!removedSomething) {
         serverMsg = fromCustomerName + " order object is removed";
       }
