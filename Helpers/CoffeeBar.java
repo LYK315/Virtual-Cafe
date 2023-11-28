@@ -352,10 +352,10 @@ public class CoffeeBar {
       ArrayList<Integer> initFromCoffeeTray = fromCustomer.getDrinkState(COFFEE, TRAY);
 
       // Transfer Orders (frmClient) > (toClient)
-      Iterator<Map.Entry<String, Orders>> iterator = orders.entrySet().iterator();
+      Iterator<String> iterator = orders.keySet().iterator();
       while (iterator.hasNext()) { // Loop Through All Customer in Order Queue
-        Map.Entry<String, Orders> entry = iterator.next();
-        String toClient = entry.getKey();
+        // Map.Entry<String, Orders> entry = iterator.next();
+        String toClient = iterator.next();
 
         // Retrieve (frmClient) Tea & Coffee in TRAY AREA
         ArrayList<Integer> fromTeaTray = fromCustomer.getDrinkState(TEA, TRAY);
@@ -488,19 +488,28 @@ public class CoffeeBar {
       // Remove All (frmClient) Orders in TRAY (if still have orders not transferred)
       // Simply remove (frmClient) from "orders" object
       int remainFrmTeaTray, remainFrmCoffeeTray;
+      boolean removedSomething = false;
       remainFrmTeaTray = fromCustomer.getDrinkState(TEA, TRAY).size();
       remainFrmCoffeeTray = fromCustomer.getDrinkState(COFFEE, TRAY).size();
+
       if (remainFrmTeaTray > 0) {
         if (remainFrmCoffeeTray > 0) {
+          removedSomething = true;
           serverMsg = "(" + remainFrmTeaTray + ")Tea and (" + remainFrmCoffeeTray + ") removed from " + fromCustomerName
               + " Tray";
         } else {
+          removedSomething = true;
           serverMsg = "(" + remainFrmTeaTray + ")Tea removed from " + fromCustomerName + " Tray";
         }
       } else if (remainFrmCoffeeTray > 0) {
+        removedSomething = true;
         serverMsg = "(" + remainFrmCoffeeTray + ")Coffee removed from " + fromCustomerName + " Tray";
       }
-      
+
+      if (!removedSomething) {
+        serverMsg = fromCustomerName + " order object is removed";
+      }
+
       // Remove (frmClient) from "orders" object
       orders.remove(fromClient);
       System.out.println(serverMsg);
