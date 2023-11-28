@@ -347,7 +347,7 @@ public class CoffeeBar {
         }
       }
 
-      // Retrieve (frmClient) Tea & Coffee in TRAY AREA
+      // Retrieve (frmClient) Initial Tea & Coffee Count in TRAY AREA
       ArrayList<Integer> initFromTeaTray = fromCustomer.getDrinkState(TEA, TRAY);
       ArrayList<Integer> initFromCoffeeTray = fromCustomer.getDrinkState(COFFEE, TRAY);
 
@@ -484,6 +484,27 @@ public class CoffeeBar {
         System.out.println(serverMsg);
         displayCafeState(serverMsg, false);
       }
+
+      // Remove All (frmClient) Orders in TRAY (if still have orders not transferred)
+      // Simply remove (frmClient) from "orders" object
+      int remainFrmTeaTray, remainFrmCoffeeTray;
+      remainFrmTeaTray = fromCustomer.getDrinkState(TEA, TRAY).size();
+      remainFrmCoffeeTray = fromCustomer.getDrinkState(COFFEE, TRAY).size();
+      if (remainFrmTeaTray > 0) {
+        if (remainFrmCoffeeTray > 0) {
+          serverMsg = "(" + remainFrmTeaTray + ")Tea and (" + remainFrmCoffeeTray + ") removed from " + fromCustomerName
+              + " Tray";
+        } else {
+          serverMsg = "(" + remainFrmTeaTray + ")Tea removed from " + fromCustomerName + " Tray";
+        }
+      } else if (remainFrmCoffeeTray > 0) {
+        serverMsg = "(" + remainFrmCoffeeTray + ")Coffee removed from " + fromCustomerName + " Tray";
+      }
+      
+      // Remove (frmClient) from "orders" object
+      orders.remove(fromClient);
+      System.out.println(serverMsg);
+      displayCafeState(serverMsg, true);
 
       shouldPause = false; // Continue Other Brew Process
     });
