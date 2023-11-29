@@ -10,7 +10,7 @@ public class Customer {
     System.out.print("Hello, how should I address you: ");
 
     try {
-      // Get User Input
+      // Get User Name
       Scanner input = new Scanner(System.in);
       String customerName = input.nextLine();
 

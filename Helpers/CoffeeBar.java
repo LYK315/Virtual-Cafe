@@ -37,10 +37,10 @@ public class CoffeeBar {
 
     // Check if Customer Order is (add-on), Else Create New Order Instance
     synchronized (orders) {
-      if (orders.containsKey(clientSocket)) {
+      if (orders.containsKey(clientSocket)) { // If order is Add-On
         isAddOn = "true"; // Set "add-on" state to True
         orders.get(clientSocket).addOnOrders(numOfTea, numOfCoffee); // Append Customer "add-on" Orders
-      } else {
+      } else { // If New Order
         Orders order = new Orders(numOfTea, numOfCoffee, customerName); // Create New Order Instance for Customer
         orders.put(clientSocket, order); // Append customer order to the "Order Queue" in Cafe
         clientCount.put(clientSocket, WAIT); // Update Customer Status to WAITING ORDER
@@ -66,7 +66,7 @@ public class CoffeeBar {
     // Append Client to "Brewing Queue"
     drinkInQueue.putIfAbsent(clientSocket, new ArrayList<Integer>());
 
-    // Brew Tea
+    // Brew Tea Thread
     if (teaWaiting.size() > 0) {
       // Loop through "teaWaiting" (TEA WAITING AREA)
       for (Integer drinkID : teaWaiting) {
@@ -114,7 +114,7 @@ public class CoffeeBar {
       }
     }
 
-    // Brew Coffee
+    // Brew Coffee Thread
     if (coffeeWaiting.size() > 0) {
       // Loop through "coffeeWaiting" (COFFEE WAITING AREA)
       for (Integer drinkID : coffeeWaiting) {
@@ -267,8 +267,8 @@ public class CoffeeBar {
       System.out.println("Orders in Tray : " + "Tea(" + teaInTray + ") & Coffee(" + coffeeInTray + ")\n");
     }
 
-    // Update Cafe State in Server Log Class
-    ServerLog serverLog = new ServerLog(); // Class to store server log to write to JSON
+    // Append Cafe State in Server Log Class
+    ServerLog serverLog = new ServerLog(); // Class to store server log attributes
     serverLog.setClientInCafe(clientInCafe);
     serverLog.setClientWaitingOrder(clientWaitingOrder);
     serverLog.setOrdersWaiting("Tea(" + teaWaiting + ") and Coffee(" + coffeeWaiting + ")");
@@ -278,6 +278,7 @@ public class CoffeeBar {
 
     // Get Current System Date & Time
     ZonedDateTime currentTimestampWithZone = ZonedDateTime.now();
+    // At-least 4 digit of nanoseconds must be used to ensure data is not overridden
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnn");
     String currentDateTime = currentTimestampWithZone.format(formatter);
 

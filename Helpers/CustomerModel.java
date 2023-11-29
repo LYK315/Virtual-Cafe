@@ -38,7 +38,7 @@ public class CustomerModel implements AutoCloseable {
     orderReply = scanner.nextLine();
     isAddOn = scanner.nextLine();
 
-    // Independent thread to poll server, untill all orders are delivered
+    // Independent thread to poll server every 15 secs, untill orders delivered
     Thread monitorOrder = new Thread(() -> {
       boolean orderFulfilled = false;
 

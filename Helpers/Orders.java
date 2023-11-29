@@ -24,6 +24,7 @@ public class Orders {
     addCoffeeOrders();
   }
 
+  // Handle add-on orders
   public void addOnOrders(int numOfTea, int numOfCoffee) {
     this.numOfTea = numOfTea;
     this.numOfCoffee = numOfCoffee;
@@ -31,6 +32,7 @@ public class Orders {
     addCoffeeOrders();
   }
 
+  // Assign drinkID and set order to WAITING area
   public void addTeaOrders() {
     if (numOfTea > 0) {
       for (int drinkID = totalOrders; drinkID < (numOfTea + totalOrders); drinkID++) {
@@ -40,6 +42,7 @@ public class Orders {
     }
   }
 
+  // Assign drinkID and set order to WAITING area
   public void addCoffeeOrders() {
     if (numOfCoffee > 0) {
       for (int drinkID = totalOrders; drinkID < (numOfCoffee + totalOrders); drinkID++) {
@@ -49,6 +52,7 @@ public class Orders {
     }
   }
 
+  // Retrieve customer name
   public String getCustomerName () {
     return customerName;
   }
