@@ -1,10 +1,10 @@
 # Virtual Cafe
-This project implements Client-Server Architecture in Java code to simulate Cafe operation and is designed to handle multiple client concurrently .
+This project implements Client-Server Architecture in Java that simulates Cafe operation and is designed to handle multiple client concurrently .
 
 # Java Version
-JDK 21 is used in this project, so make sure your Java version is up to date if you are running on terminal .
+JDK 21 is used in this project, so make sure your Java version is up to date if to prevent any error while compiling .
 
-Check your Java and Java Compiler Version :
+To Check your Java and Java Compiler Version :
 ```
 javac --version
 
@@ -16,6 +16,21 @@ Download latest JDK on [Oracle Official Website](https://www.oracle.com/java/tec
 Note that `Gson 2.10.1` is used in this project, so make sure you see a file named *`"gson-2.10.1.jar"`* in the root folder befor you run the program .
 
 Download latest Gson on [Maven Repository](https://mvnrepository.com/artifact/com.google.code.gson/gson) .
+
+# Customer Role
+Below shows what a customer is able to do from ***Client Terminal*** in this program .
+```
+Order Drinks
+>> order 1 tea
+>> order 1 coffee
+>> order 1 tea and 2 coffees
+
+Check Order Status
+>> order status
+
+Exit Cafe
+>> exit
+```
 
 # How to Run
 Compile *`Barista.java`* and *`Customer.java`* on terminal .
@@ -59,7 +74,7 @@ e.g.
 >> order 10 tea and 10 coffee
 
 2nd Client
->> order 2 tea and 2 coffee
+>> order 2 teas and 2 coffees
 
 3rd Client
 >> order 3 tea
@@ -69,7 +84,7 @@ e.g.
 ```
 
 \
-5. Now, while 1st Client's order is **still being processed**, let him **exit the Cafe**. Either type "*exit*" or press "*CTRL+C*". Play around with it and see the difference later.
+5. Now, **before** 1st Client's **order is delivered**, let him **exit the Cafe**. Either type "*exit*" or press "*CTRL+C*". Feel free to play around with it and see the difference later.
 ```
 >> exit
 
@@ -89,14 +104,30 @@ Finishing "1st Client" orders in brewing area..
 ```
 
 \
-7. Also, don't forget about the ***Client Terminal*** too. Other client's orders might be delivered in any seconds! And you should be able to see similar **notification** (as below) on their terminal screen.
+7. Then, you should also be able to see message (as below) in ***Server Terminal*** regarding **order transferred**.
+```
+(*)Tea (*)Coffee transferred from 1st Client to 2nd Client.
+```
+
+\
+8. You should also see message (as below) in ***Server Terminal*** if 1st Client's order in Tray is not fully transferred to other customer. `[TRY IT LATER]`
+```
+(*)Tea removed from 1st Client Tray.
+
+or 
+
+(*)Coffee removed from 1st Client Tray.
+```
+
+\
+9. Don't forget about the ***Client Terminal*** too. Other client's orders might be delivered in any seconds! And you should be able to see similar **notification** (as below) on their terminal screen.
 ```
 *** NOTIFICATION ***
 Dear "2nd Client" your order is delivered (2 teas and 2 coffees)
 ```
 
 \
-8. Now, let every client **exit** and **shut down** the ***Server Terminal*** by "*CTRL+C*". And you should be able to see a file *`"serverLog.json"`* appeared in your root folder. You should see info similar to below in the file.
+10. Now, let every client **exit** and **shut down** the ***Server Terminal*** by "*CTRL+C*". And you should be able to see a file *`"serverLog.json"`* appeared in your root folder. You should see info similar to below in the file.
 ```
 {
   "2023-11-28 23:44:52:236290800": {
@@ -123,7 +154,7 @@ Dear "2nd Client" your order is delivered (2 teas and 2 coffees)
 
 # Key Highlights (recap)
 - Establishes Connection between **Client** and **Server**.
-- Server can handle **Multiple Clients Concurrently**.
+- Server handles **Multiple Clients Concurrently**.
 - Server **Displays every single Change** in the Cafe.
 - Client can **Place Orders**.
 - Client can **Check Order Status** anytime.
@@ -133,13 +164,15 @@ Dear "2nd Client" your order is delivered (2 teas and 2 coffees)
 - Server generates **Server Log File** that records every single change in the Cafe before shutting down.
 - Intercepts and **handles SIGTERM** Signals.
 
-# Final Words
+# Conclusion
 Feel free to play around with the program, obsereve the messages displayed on ***Client Terminal*** and ***Server Terminal*** on different scenarios. But do note that **error checking is not fully implemented** in this program, so please at least try to follow the Customer Role, especially when placing orders.
 
 # Author
 Liaw Yi Kai\
 University Of Essex\
 yl23705@essex.ac.uk
+
+Updated November, 2023.
 
 
 
