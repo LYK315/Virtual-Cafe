@@ -37,11 +37,11 @@ Compile *`Barista.java`* and *`Customer.java`* on terminal .
 
 ```
 Windows:
-javac -cp .; gson-2.10.1.jar Barista.java
+javac -cp .;gson-2.10.1.jar Barista.java
 javac Customer.java
 
 Linux: 
-javac -cp .: gson-2.10.1.jar Barista.java
+javac -cp .:gson-2.10.1.jar Barista.java
 javac Customer.java
 ```
 Everything will be explained based on **Windows** environment, remember to change **' ; '** to **' : '** in terminal if you are using **Linux**.
@@ -49,7 +49,7 @@ Everything will be explained based on **Windows** environment, remember to chang
 
 1 . Run the *`Barista.java (server)`* and *`Customer.java (client)`*.
 ```
-java -cp .; gson-2.10.1.jar Barista
+java -cp .;gson-2.10.1.jar Barista
 java Customer
 ```
 \
